@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     federation({
-      name: "question-ui-service",
+      name: "collab-ui-service",
       filename: "remoteEntry.js",
       exposes: {
         "./WorkingWindow": "./src/components/WorkingWindow",
