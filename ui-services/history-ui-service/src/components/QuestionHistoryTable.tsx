@@ -65,7 +65,7 @@ const HistoryTable: React.FC = () => {
       {/* Content */}
       <div className="flex flex-col items-center gap-4 overflow-y-auto min-h-[70vh]">
         {currentItems.map((item, index) => (
-          <QuestionCard index={index} item={item} />
+          <QuestionCard key={index} index={index} item={item} />
         ))}
       </div>
     </div>
