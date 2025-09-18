@@ -13,7 +13,7 @@ COPY . .
 RUN npm run build
 
 # Expose port
-EXPOSE 5175
+EXPOSE 5178
 
 # Start with Vite preview (serves dist/)
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5178", "--strictPort"]
