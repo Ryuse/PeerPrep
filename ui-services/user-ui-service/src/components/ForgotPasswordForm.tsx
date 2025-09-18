@@ -8,7 +8,7 @@ const ForgotPasswordForm: React.FC = () => {
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
         <input
-          type="confirmPassword"
+          type="password"
           placeholder="Re-enter Password"
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
