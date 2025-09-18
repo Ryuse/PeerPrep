@@ -1,5 +1,5 @@
 import AuthLayout from "@components/auth/AuthLayout";
-import ForgotPasswordForm from "userUiService/ForgotPasswordForm"
+import ForgotPasswordForm from "userUiService/ForgotPasswordForm";
 const ForgotPasswordPage: React.FC = () => {
   return (
     <AuthLayout>

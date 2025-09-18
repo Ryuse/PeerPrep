@@ -1,5 +1,5 @@
 import AuthLayout from "@components/auth/AuthLayout";
-import LoginForm from "userUiService/LoginForm"
+import LoginForm from "userUiService/LoginForm";
 
 const LoginPage: React.FC = () => {
   return (

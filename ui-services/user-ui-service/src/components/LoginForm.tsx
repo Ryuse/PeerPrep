@@ -27,7 +27,7 @@ const LoginForm: React.FC = () => {
         </a>
       </div>
 
-      <a href="matching">
+      <a href="/matching">
         <button
           type="button"
           className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
