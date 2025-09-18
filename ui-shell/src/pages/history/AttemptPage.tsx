@@ -5,7 +5,7 @@ import { mockQuestions } from "@/data/mock-history-data";
 import WorkingWindow from "collabUiService/WorkingWindow";
 
 import NoteWindow from "historyUiService/NotesWindow";
-import NavHeader from "@components/common/NavHeader"
+import NavHeader from "@components/common/NavHeader";
 const QuestionAttemptsPage: React.FC = () => {
   return (
     <Layout navHeader={<NavHeader />}>
