@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import NavHeader from "@components/common/NavHeader";
-import MatchingUi from "matchingUiService/MatchingUi"
+
 // Lazy load the remote MFE
 const RemoteMatchingUi = React.lazy(
   () => import("matchingUiService/MatchingUi")
