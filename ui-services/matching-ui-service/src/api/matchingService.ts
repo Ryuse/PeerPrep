@@ -21,13 +21,34 @@ export type PreferenceResult =
   | { status: "notFound" }
   | { status: "error"; error: any };
 
+async function handleResponse<T>(
+  response: Response,
+  notFoundStatus = 404
+): Promise<
+  | { status: "found"; data: T }
+  | { status: "notFound" }
+  | { status: "error"; error: any }
+> {
+  if (response.status === notFoundStatus) {
+    return { status: "notFound" };
+  }
+
+  if (!response.ok) {
+    return { status: "error", error: `HTTP error ${response.status}` };
+  }
+
+  try {
+    const data = (await response.json()) as T;
+    return { status: "found", data };
+  } catch (err) {
+    return { status: "error", error: err };
+  }
+}
+
 export async function requestMatch(
   preferences: UserPreferences
 ): Promise<MatchResult> {
-  const apiUri = "http://localhost:5274/api/matching-service/";
-  console.log("API URI:", apiUri);
-  if (!apiUri) throw new Error("API link is not defined");
-
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}request-match/${preferences.userId}`;
 
   try {
@@ -37,28 +58,16 @@ export async function requestMatch(
       body: JSON.stringify(preferences),
     });
 
-    if (response.status === 202) {
-      return { status: "notFound" };
-    }
-
-    if (!response.ok) {
-      return { status: "error", error: `HTTP error ${response.status}` };
-    }
-
-    const data: MatchingResponse = await response.json();
-    return { status: "found", data };
+    return handleResponse<MatchingResponse>(response, 202);
   } catch (err) {
     return { status: "error", error: err };
   }
 }
 
 export async function requestPreference(
-  userId: String
+  userId: string
 ): Promise<PreferenceResult> {
-  const apiUri = "http://localhost:5274/api/matching-service/";
-  console.log("API URI:", apiUri);
-  if (!apiUri) throw new Error("API link is not defined");
-
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}${userId}`;
 
   try {
@@ -67,25 +76,17 @@ export async function requestPreference(
       headers: { "Content-Type": "application/json" },
     });
 
-    if (!response.ok) {
-      return { status: "error", error: `HTTP error ${response.status}` };
-    }
-
-    const data: UserPreferences = await response.json();
-    return { status: "found", data };
+    return handleResponse<UserPreferences>(response);
   } catch (err) {
     return { status: "error", error: err };
   }
 }
 
 export async function createPreference(
-  userId: String,
+  userId: string,
   preferences: UserPreferences
 ): Promise<PreferenceResult> {
-  const apiUri = "http://localhost:5274/api/matching-service/";
-  console.log("API URI:", apiUri);
-  if (!apiUri) throw new Error("API link is not defined");
-
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}${userId}`;
 
   try {
@@ -95,12 +96,7 @@ export async function createPreference(
       body: JSON.stringify(preferences),
     });
 
-    if (!response.ok) {
-      return { status: "error", error: `HTTP error ${response.status}` };
-    }
-
-    const data: UserPreferences = await response.json();
-    return { status: "found", data };
+    return handleResponse<UserPreferences>(response);
   } catch (err) {
     return { status: "error", error: err };
   }
