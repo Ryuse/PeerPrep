@@ -4,29 +4,26 @@ import MatchFound from "@/components/MatchFound";
 
 import MatchSearch from "@/components/MatchSearch";
 import StartMatching from "@/components/StartMatching";
+import type { MatchingResponse, UserPreferences } from "@/api/matchingService";
 
 type PageView = "initial" | "preferences" | "matching" | "matchFound";
 
 const MatchingPage: React.FC = () => {
   const [currentView, setCurrentView] = useState<PageView>("initial");
-  const [matchData, setMatchData] = useState<any | null>(null);
-  const [preferences, setPreferences] = useState<any | null>(null);
+  const [matchData, setMatchData] = useState<MatchingResponse | null>(null);
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
 
   const handleStartMatching = (): void => {
     setCurrentView("preferences");
   };
 
-  const handleConfirmPreferences = (prefs: any): void => {
+  const handleConfirmPreferences = (prefs: UserPreferences): void => {
     setPreferences(prefs);
     setCurrentView("matching");
   };
 
   const handleMatchFound = (): void => {
     setCurrentView("matchFound");
-  };
-
-  const handleAcceptMatch = (): void => {
-    setCurrentView("initial");
   };
 
   const handleCancel = (): void => {
@@ -65,8 +62,6 @@ const MatchingPage: React.FC = () => {
           timeMins={matchData.minTime}
           topic={matchData.topics[0]}
           onCancel={handleCancel}
-          onAccept={handleAcceptMatch}
-          initialTime={15}
         />
       )}
     </main>
