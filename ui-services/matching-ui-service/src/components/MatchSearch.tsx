@@ -4,12 +4,13 @@ import {
   requestMatch,
   type UserPreferences,
   type MatchResult,
+  type MatchingResponse,
 } from "@/api/matchingService";
 
 interface MatchSearchProps {
   userId: string;
   preferences: Omit<UserPreferences, "userId">;
-  onMatchFound: (matchData: any) => void;
+  onMatchFound: (matchData: MatchingResponse) => void;
   onCancel: () => void;
 }
 
@@ -49,7 +50,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
 
     return () => clearInterval(interval);
   }, [view]);
-
+  
   // Match request
   useEffect(() => {
     let aborted = false;
