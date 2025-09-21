@@ -28,7 +28,7 @@ const MatchErrorDialog: React.FC<MatchErrorDialogProps> = ({ onClose }) => {
         </DialogHeader>
 
         <DialogFooter className="flex justify-center mt-4">
-          <Button onClick={onClose} className="bg-orange-600 hover:bg-red-700">
+          <Button onClick={onClose} className="bg-orange-600 hover:bg-orange-700">
             Okay!
           </Button>
         </DialogFooter>
