@@ -66,9 +66,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
         } else if (result.status === "notFound") {
           setView("matchNotFound");
         } else if (result.status === "error") {
-          console.log("Setting view to matchError", result.error);
           setView("matchError");
-          console.log("Current View", view);
         }
       } catch (err) {
         if (!aborted) {
