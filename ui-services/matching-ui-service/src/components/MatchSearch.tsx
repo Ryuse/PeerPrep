@@ -7,12 +7,14 @@ import {
 } from "@/api/matchingService";
 
 interface MatchSearchProps {
+  userId: string;
   preferences: Omit<UserPreferences, "userId">;
   onMatchFound: (matchData: any) => void;
   onCancel: () => void;
 }
 
 const MatchingSearch: React.FC<MatchSearchProps> = ({
+  userId,
   preferences,
   onMatchFound,
   onCancel,
@@ -53,7 +55,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
     const doRequest = async () => {
       try {
         const result: MatchResult = await requestMatch({
-          userId: "TEST_USER",
+          userId,
           ...preferences,
         });
 

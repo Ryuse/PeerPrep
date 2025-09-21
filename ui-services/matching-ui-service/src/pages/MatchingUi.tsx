@@ -48,6 +48,7 @@ const MatchingPage: React.FC = () => {
 
       {currentView === "matching" && preferences && (
         <MatchSearch
+          userId={"TEST_USER"}
           preferences={preferences}
           onMatchFound={(data) => {
             setMatchData(data);
