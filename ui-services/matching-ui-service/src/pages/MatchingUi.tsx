@@ -1,66 +1,66 @@
 import { useState } from "react";
-import QuestionPreferences from "@/components/QuestionPreferences";
-import MatchNotification from "@/components/MatchNotification";
-import MatchingSearch from "@/components/MatchingSearch";
+import QuestionPreferences from "@/components/question-preference/QuestionPreferences";
+import MatchFound from "@/components/MatchFound";
 
-// Define the possible states for the view, including 'matching'
+import MatchSearch from "@/components/MatchSearch";
+import StartMatching from "@/components/StartMatching";
+
 type PageView = "initial" | "preferences" | "matching" | "matchFound";
 
 const MatchingPage: React.FC = () => {
   const [currentView, setCurrentView] = useState<PageView>("initial");
+  const [matchData, setMatchData] = useState<any | null>(null);
+  const [preferences, setPreferences] = useState<any | null>(null);
 
   const handleStartMatching = (): void => {
     setCurrentView("preferences");
   };
 
-  const handleConfirmPreferences = (): void => {
-    console.log("Preferences confirmed. Starting the matching process...");
+  const handleConfirmPreferences = (prefs: any): void => {
+    setPreferences(prefs);
     setCurrentView("matching");
   };
 
   const handleMatchFound = (): void => {
-    console.log("Match found! Showing notification.");
     setCurrentView("matchFound");
   };
 
-  const handleCancelMatch = (): void => {
-    console.log("Matching process cancelled.");
+  const handleAcceptMatch = (): void => {
     setCurrentView("initial");
   };
 
-  const handleAcceptMatch = (): void => {
-    console.log("Match was accepted");
+  const handleCancel = (): void => {
     setCurrentView("initial");
   };
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center text-center">
       {currentView === "initial" && (
-        <div>
-          <h1 className="text-5xl font-medium mb-8">Start a session</h1>
-          <button
-            className="px-8 py-3 bg-orange-600 text-white rounded-md text-lg font-semibold shadow hover:bg-orange-700 transition"
-            onClick={handleStartMatching}
-          >
-            Start Matching!
-          </button>
-        </div>
+        <StartMatching onStart={handleStartMatching} />
       )}
 
       {currentView === "preferences" && (
         <QuestionPreferences onConfirm={handleConfirmPreferences} />
       )}
 
-      {currentView === "matching" && (
-        <MatchingSearch
-          onMatchFound={handleMatchFound}
-          onCancel={handleCancelMatch}
+      {currentView === "matching" && preferences && (
+        <MatchSearch
+          preferences={preferences}
+          onMatchFound={(data) => {
+            setMatchData(data);
+            handleMatchFound();
+          }}
+          onCancel={handleCancel}
         />
       )}
 
-      {currentView === "matchFound" && (
-        <MatchNotification
-          onCancel={handleCancelMatch}
+      {currentView === "matchFound" && matchData && (
+        <MatchFound
+          matchedName={matchData.userId}
+          difficulty={matchData.difficulties[0]}
+          timeMins={matchData.minTime}
+          topic={matchData.topics[0]}
+          onCancel={handleCancel}
           onAccept={handleAcceptMatch}
           initialTime={15}
         />
