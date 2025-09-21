@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button";
 
 interface MatchErrorDialogProps {
   onClose: () => void;
-  onRetry?: () => void;
-  autoCloseTime?: number;
 }
 
 const MatchErrorDialog: React.FC<MatchErrorDialogProps> = ({ onClose }) => {
@@ -28,7 +26,10 @@ const MatchErrorDialog: React.FC<MatchErrorDialogProps> = ({ onClose }) => {
         </DialogHeader>
 
         <DialogFooter className="flex justify-center mt-4">
-          <Button onClick={onClose} className="bg-orange-600 hover:bg-orange-700">
+          <Button
+            onClick={onClose}
+            className="bg-orange-600 hover:bg-orange-700"
+          >
             Okay!
           </Button>
         </DialogFooter>

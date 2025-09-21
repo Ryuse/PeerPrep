@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button";
 
 interface MatchNotFoundDialogProps {
   onClose: () => void;
-  onRetry?: () => void;
-  autoCloseTime?: number;
 }
 
 const MatchNotFoundDialog: React.FC<MatchNotFoundDialogProps> = ({
@@ -21,9 +19,7 @@ const MatchNotFoundDialog: React.FC<MatchNotFoundDialogProps> = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="bg-white text-black text-center">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
-            No Match Found
-          </DialogTitle>
+          <DialogTitle className="text-2xl">No Match Found</DialogTitle>
           <DialogDescription className="mt-2">
             We couldn't find a match for your preferences.
           </DialogDescription>
