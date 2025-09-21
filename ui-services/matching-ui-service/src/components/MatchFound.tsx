@@ -2,23 +2,25 @@ import React, { useState, useEffect } from "react";
 
 interface MatchFoundProps {
   matchedName: string;
-  difficulty?: string;
-  timeMins?: number; // total time in seconds
-  topic?: string;
-  onCancel?: () => void;
-  onAccept?: () => void;
-  initialTime?: number;
+  difficulty: string;
+  timeMins: number;
+  topic: string;
+  onCancel: () => void;
 }
 
 const formatTime = (totalMinutes: number) => {
   if (totalMinutes < 60) {
     return `${totalMinutes}min`;
-  } else {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    // Don't show minutes if it's 0 (e.g., for exactly 1h)
-    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
   }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (minutes > 0) {
+    return `${hours}h ${minutes}min`;
+  }
+
+  return `${hours}h`;
 };
 
 const MatchFound: React.FC<MatchFoundProps> = ({
@@ -27,14 +29,13 @@ const MatchFound: React.FC<MatchFoundProps> = ({
   timeMins = 0,
   topic = "N/A",
   onCancel,
-  onAccept,
-  initialTime = 15,
 }) => {
+  const initialTime: number = 15;
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
     if (timeLeft === 0) {
-      handleCancel();
+      onCancel();
       return;
     }
 
@@ -42,15 +43,16 @@ const MatchFound: React.FC<MatchFoundProps> = ({
     return () => clearTimeout(timer);
   }, [timeLeft]);
 
-  const handleCancel = (): void => onCancel?.();
-  const handleAccept = (): void => onAccept?.();
-
   return (
     <div className="">
+      {/*Matched with and question details*/}
       <div className="p-6">
+        {/*Matched With*/}
         <h2 className="text-white text-5xl font-bold text-gray-900">
           Matched with <span className="text-sky-400">{matchedName}</span>
         </h2>
+
+        {/*Match Details*/}
         <div className="flex gap-2 mt-3 justify-center">
           <span className="inline-flex items-center px-5 py-1.5 rounded text-xl font-medium bg-white text-black">
             {difficulty}
@@ -64,6 +66,7 @@ const MatchFound: React.FC<MatchFoundProps> = ({
         </div>
       </div>
 
+      {/*Loading Animation*/}
       <div className="px-6 py-4">
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div
@@ -76,18 +79,16 @@ const MatchFound: React.FC<MatchFoundProps> = ({
         </div>
       </div>
 
+      {/*Buttons*/}
       <div className="flex p-4 gap-10 justify-center">
         <button
-          onClick={handleCancel}
+          onClick={onCancel}
           className="px-4 py-2 bg-black text-white rounded-lg shadow hover:bg-gray-800 transition"
         >
           Cancel
         </button>
         <a href="/collab">
-          <button
-            onClick={handleAccept}
-            className="px-8 py-3 bg-orange-600 text-white rounded-md text-lg font-semibold shadow hover:bg-orange-700 transition"
-          >
+          <button className="px-8 py-3 bg-orange-600 text-white rounded-md text-lg font-semibold shadow hover:bg-orange-700 transition">
             Accept Match!
           </button>
         </a>
