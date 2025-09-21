@@ -41,12 +41,14 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
 
   // Status messages
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (view !== "searching") return;
+
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev + 1) % messages.length);
     }, 3000);
+
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [view]);
 
   // Match request
   useEffect(() => {
@@ -80,7 +82,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
     return () => {
       aborted = true;
     };
-  }, [preferences, onMatchFound]);
+  }, [userId, preferences, onMatchFound]);
 
   return (
     <MatchStatusUI
