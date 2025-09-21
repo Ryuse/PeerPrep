@@ -98,8 +98,8 @@ const QuestionPreferences: React.FC<QuestionPreferencesProps> = ({
           <TimeLimitSelector
             timeMin={timeMin}
             timeMax={timeMax}
-            setTimeMin={(value) => setTimeMin(Number(value))}
-            setTimeMax={(value) => setTimeMax(Number(value))}
+            setTimeMin={(value) => setTimeMin(value)}
+            setTimeMax={(value) => setTimeMax(value)}
           />
         </div>
       </div>
