@@ -16,6 +16,11 @@ export type MatchResult =
   | { status: "notFound" }
   | { status: "error"; error: any };
 
+export type PreferenceResult =
+  | { status: "found"; data: UserPreferences }
+  | { status: "notFound" }
+  | { status: "error"; error: any };
+
 export async function requestMatch(
   preferences: UserPreferences
 ): Promise<MatchResult> {
@@ -41,6 +46,60 @@ export async function requestMatch(
     }
 
     const data: MatchingResponse = await response.json();
+    return { status: "found", data };
+  } catch (err) {
+    return { status: "error", error: err };
+  }
+}
+
+export async function requestPreference(
+  userId: String
+): Promise<PreferenceResult> {
+  const apiUri = "http://localhost:5274/api/matching-service/";
+  console.log("API URI:", apiUri);
+  if (!apiUri) throw new Error("API link is not defined");
+
+  const uriLink = `${apiUri}${userId}`;
+
+  try {
+    const response = await fetch(uriLink, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      return { status: "error", error: `HTTP error ${response.status}` };
+    }
+
+    const data: UserPreferences = await response.json();
+    return { status: "found", data };
+  } catch (err) {
+    return { status: "error", error: err };
+  }
+}
+
+export async function createPreference(
+  userId: String,
+  preferences: UserPreferences
+): Promise<PreferenceResult> {
+  const apiUri = "http://localhost:5274/api/matching-service/";
+  console.log("API URI:", apiUri);
+  if (!apiUri) throw new Error("API link is not defined");
+
+  const uriLink = `${apiUri}${userId}`;
+
+  try {
+    const response = await fetch(uriLink, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(preferences),
+    });
+
+    if (!response.ok) {
+      return { status: "error", error: `HTTP error ${response.status}` };
+    }
+
+    const data: UserPreferences = await response.json();
     return { status: "found", data };
   } catch (err) {
     return { status: "error", error: err };

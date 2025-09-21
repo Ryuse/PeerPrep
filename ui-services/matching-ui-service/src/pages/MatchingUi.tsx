@@ -40,7 +40,10 @@ const MatchingPage: React.FC = () => {
       )}
 
       {currentView === "preferences" && (
-        <QuestionPreferences onConfirm={handleConfirmPreferences} />
+        <QuestionPreferences
+          onConfirm={handleConfirmPreferences}
+          userId={"TEST_USER"}
+        />
       )}
 
       {currentView === "matching" && preferences && (
