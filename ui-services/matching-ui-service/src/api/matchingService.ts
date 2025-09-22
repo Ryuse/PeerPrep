@@ -53,7 +53,7 @@ export async function requestMatch(
 
   try {
     const response = await fetch(uriLink, {
-      method: "POST",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(preferences),
     });
