@@ -23,7 +23,7 @@ export type PreferenceResult =
 
 async function handleResponse<T>(
   response: Response,
-  notFoundStatus = 404
+  notFoundStatus = 404,
 ): Promise<
   | { status: "found"; data: T }
   | { status: "notFound" }
@@ -46,7 +46,7 @@ async function handleResponse<T>(
 }
 
 export async function requestMatch(
-  preferences: UserPreferences
+  preferences: UserPreferences,
 ): Promise<MatchResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}request-match/${preferences.userId}`;
@@ -65,7 +65,7 @@ export async function requestMatch(
 }
 
 export async function requestPreference(
-  userId: string
+  userId: string,
 ): Promise<PreferenceResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}${userId}`;
@@ -84,7 +84,7 @@ export async function requestPreference(
 
 export async function createPreference(
   userId: string,
-  preferences: UserPreferences
+  preferences: UserPreferences,
 ): Promise<PreferenceResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}${userId}`;

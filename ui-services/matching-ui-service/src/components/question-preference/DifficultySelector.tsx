@@ -15,7 +15,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
     setSelectedDifficulties((prev) =>
       prev.includes(difficulty)
         ? prev.filter((d) => d !== difficulty)
-        : [...prev, difficulty]
+        : [...prev, difficulty],
     );
   };
 
@@ -26,7 +26,9 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
         {difficulties.map((difficulty) => (
           <Button
             key={difficulty}
-            variant={selectedDifficulties.includes(difficulty) ? "default" : "outline"}
+            variant={
+              selectedDifficulties.includes(difficulty) ? "default" : "outline"
+            }
             onClick={() => handleToggle(difficulty)}
             className={`${
               selectedDifficulties.includes(difficulty)

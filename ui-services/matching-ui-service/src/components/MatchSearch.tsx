@@ -50,7 +50,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
 
     return () => clearInterval(interval);
   }, [view]);
-  
+
   // Match request
   useEffect(() => {
     let aborted = false;

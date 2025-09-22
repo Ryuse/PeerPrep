@@ -20,7 +20,7 @@ const QuestionPreferences: React.FC<QuestionPreferencesProps> = ({
 }) => {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(
-    []
+    [],
   );
   const [timeMin, setTimeMin] = useState<number>(10);
   const [timeMax, setTimeMax] = useState<number>(120);

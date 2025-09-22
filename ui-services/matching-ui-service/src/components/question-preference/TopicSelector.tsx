@@ -13,7 +13,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
 }) => {
   const handleToggle = (topic: string) => {
     setSelectedTopics((prev) =>
-      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic],
     );
   };
 

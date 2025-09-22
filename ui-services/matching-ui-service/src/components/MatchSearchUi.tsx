@@ -28,13 +28,9 @@ const MatchSearchUi: React.FC<MatchSearchUiProps> = ({
         Cancel
       </Button>
 
-      {view === "matchNotFound" && (
-        <MatchNotFoundDialog onClose={onCancel}/>
-      )}
+      {view === "matchNotFound" && <MatchNotFoundDialog onClose={onCancel} />}
 
-      {view === "matchError" && (
-        <MatchErrorDialog onClose={onCancel}/>
-      )}
+      {view === "matchError" && <MatchErrorDialog onClose={onCancel} />}
     </div>
   );
 };

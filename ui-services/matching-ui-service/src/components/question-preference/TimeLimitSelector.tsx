@@ -21,7 +21,7 @@ const generateTimeOptions = () => {
       // The value of the option is a number
       <option key={minutes} value={minutes}>
         {timeString}
-      </option>
+      </option>,
     );
   }
   return options;
