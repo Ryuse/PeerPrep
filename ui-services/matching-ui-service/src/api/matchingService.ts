@@ -64,6 +64,29 @@ export async function requestMatch(
   }
 }
 
+export async function cancelMatch(
+  userId: string,
+): Promise<null | { status: string; error: any }> {
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
+  const uriLink = `${apiUri}cancel-match/${userId}`;
+
+  try {
+    const response = await fetch(uriLink, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      return null;
+    } else {
+      const errorBody = await response.json().catch(() => ({}));
+      return { status: "error", error: errorBody };
+    }
+  } catch (err) {
+    return { status: "error", error: err };
+  }
+}
+
 export async function requestPreference(
   userId: string,
 ): Promise<PreferenceResult> {

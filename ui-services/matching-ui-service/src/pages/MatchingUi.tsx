@@ -5,6 +5,7 @@ import MatchFound from "@/components/MatchFound";
 import MatchSearch from "@/components/MatchSearch";
 import StartMatching from "@/components/StartMatching";
 import type { MatchingResponse, UserPreferences } from "@/api/matchingService";
+import { cancelMatch } from "@/api/matchingService";
 
 type PageView = "initial" | "preferences" | "matching" | "matchFound";
 
@@ -26,7 +27,11 @@ const MatchingPage: React.FC = () => {
     setCurrentView("matchFound");
   };
 
-  const handleCancel = (): void => {
+  const handleCancel = async (): Promise<void> => {
+    if (preferences) {
+      await cancelMatch("TEST_USER");
+    }
+
     setCurrentView("initial");
   };
 
