@@ -41,7 +41,7 @@ const MatchFound: React.FC<MatchFoundProps> = ({
 
     const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
     return () => clearTimeout(timer);
-  }, [timeLeft]);
+  }, [timeLeft, onCancel]);
 
   return (
     <div className="">
