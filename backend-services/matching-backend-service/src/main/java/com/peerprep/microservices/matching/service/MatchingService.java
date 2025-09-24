@@ -1,30 +1,23 @@
 package com.peerprep.microservices.matching.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.peerprep.microservices.matching.dto.MatchNotification;
+import com.peerprep.microservices.matching.dto.MatchRedisResult;
 import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.ExistingPendingMatchRequestException;
 import com.peerprep.microservices.matching.exception.NoPendingMatchRequestException;
-import com.peerprep.microservices.matching.exception.UserPreferenceNotFoundException;
 import com.peerprep.microservices.matching.model.UserPreference;
 import com.peerprep.microservices.matching.repository.MatchingRepository;
 
@@ -39,8 +32,8 @@ public class MatchingService {
   private final MatchingRepository userPreferenceRepository;
   private final RedisMatchService redisMatchService;
   private final UserPreferenceService userPreferenceService;
-
   private final RedisTemplate<String, Object> redisTemplate;
+  private final ObjectMapper objectMapper;
 
   /**
    * Waiting futures is still needed so we can remove users from cache when
@@ -48,7 +41,11 @@ public class MatchingService {
    */
   private final Map<String, CompletableFuture<UserPreferenceResponse>> waitingFutures = new ConcurrentHashMap<>();
 
+  private static final String MATCH_CHANNEL = "match-notifications";
+  private static final String CANCEL_CHANNEL = "cancel-notifications";
+
   // ---------- [Matching] ----------
+
   /**
    * Attempt to find a match for a user asynchronously within a given time frame.
    *
@@ -68,23 +65,52 @@ public class MatchingService {
   public CompletableFuture<UserPreferenceResponse> requestMatchAsync(UserPreferenceRequest request, long timeoutMs) {
     UserPreference pref = userPreferenceService.mapToUserPreference(request);
     String userId = pref.getUserId();
+    String requestId = UUID.randomUUID().toString(); // generate unique request id
+    log.info("User {} is requesting a match with requestId {}", userId, requestId);
 
     CompletableFuture<UserPreferenceResponse> future = new CompletableFuture<>();
 
-    // Use RedisMatchService to match or add to pool
-    UserPreference matchedPref = redisMatchService.match(pref);
+    // Call Lua script with requestId embedded
+    MatchRedisResult matchRedisResult = redisMatchService.match(pref, requestId);
+
+    // Use RedisMatchService to match or add to pool and if old request was deleted
+    Assert.notNull(matchRedisResult, "Redis script returned null");
+
+    String oldRequestId = matchRedisResult.getOldRequestId();
+    Boolean oldDeleted = matchRedisResult.isOldRequestDeleted();
+
+    // If old request was deleted, notify other instances to cancel the future with
+    // the oldRequestId.
+    if (oldDeleted) {
+      redisTemplate.convertAndSend(CANCEL_CHANNEL, oldRequestId);
+      log.info("Notified other instances to cancel previous request for user {}", userId);
+      log.info("Previous match request for user {} was removed", userId);
+    }
+
+    UserPreference matchedPref = matchRedisResult.getMatched();
+    String matchedRequestId = matchRedisResult.getMatchedRequestId();
+
+    // Match found immediately
     if (matchedPref != null) {
-      CompletableFuture<UserPreferenceResponse> otherFuture = waitingFutures.remove(matchedPref.getUserId());
-      otherFuture.complete(userPreferenceService.mapToResponse(pref));
+      // Publish notification to all instances
+      MatchNotification matchResult = new MatchNotification(requestId, matchedRequestId, pref, matchedPref);
+      publishMatchNotification(matchResult);
+
+      // Complete this instance's future immediately
       future.complete(userPreferenceService.mapToResponse(matchedPref));
       return future;
     }
-    waitingFutures.put(userId, future);
+
+    // No match found - user added to pool, store future for later completion
+    waitingFutures.put(requestId, future);
 
     // Timeout handling
     CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute(() -> {
       if (!future.isDone()) {
-        cancelMatchRequest(userId);
+        boolean removed = redisMatchService.remove(userId);
+        waitingFutures.remove(userId);
+        future.complete(null);
+        log.info("User {} match request has timed out", userId);
       }
     });
     return future;
@@ -102,11 +128,72 @@ public class MatchingService {
       throw new NoPendingMatchRequestException(userId);
     }
 
-    CompletableFuture<UserPreferenceResponse> future = waitingFutures.remove(userId);
-    if (future != null && !future.isDone()) {
-      future.complete(null);
+    publishCancelNotification(userId);
+  }
+
+  // ---------- [Event Handlers] ----------
+  private void publishMatchNotification(MatchNotification matchResult) {
+    try {
+      String message = objectMapper.writeValueAsString(matchResult);
+      redisTemplate.convertAndSend(MATCH_CHANNEL, message);
+      log.info("Published match result for users {} and {}",
+          matchResult.getUser1Preference().getUserId(),
+          matchResult.getUser2Preference().getUserId());
+    } catch (JsonProcessingException e) {
+      log.error("Failed to publish match result", e);
+    }
+  }
+
+  private void publishCancelNotification(String userId) {
+    redisTemplate.convertAndSend(CANCEL_CHANNEL, userId);
+    log.info("Published match cancel notification for user {}", userId);
+  }
+
+  public void handleMatchNotification(MatchNotification matchResult) {
+    String user1RequestId = matchResult.getUser1RequestId();
+    String user2RequestId = matchResult.getUser2RequestId();
+    String user1Id = matchResult.getUser1Preference().getUserId();
+    String user2Id = matchResult.getUser2Preference().getUserId();
+
+    log.info("Handling match notification for users {} and {}",
+        user1Id,
+        user2Id);
+    log.info("Request IDs: {} and {}", user1RequestId, user2RequestId);
+
+    CompletableFuture<UserPreferenceResponse> future1 = waitingFutures.get(user1RequestId);
+    CompletableFuture<UserPreferenceResponse> future2 = waitingFutures.get(user2RequestId);
+
+    log.info("Futures: {}, {}", future1, future2); // Both futures are null when I test with two different users.
+
+    if (future1 != null && !future1.isDone()) {
+      log.info("Completing future for user {} via pub/sub", user1Id);
+      UserPreferenceResponse user1Response = userPreferenceService.mapToResponse(matchResult.getUser1Preference());
+      future1.complete(user1Response);
+      waitingFutures.remove(user1RequestId);
+      log.info("Completed future for user {} via pub/sub", user1Id);
     }
 
-    log.info("User {} canceled their match request", userId);
+    if (future2 != null && !future2.isDone()) {
+      log.info("Completing future for user {} via pub/sub", user2Id);
+      UserPreferenceResponse user2Response = userPreferenceService.mapToResponse(matchResult.getUser1Preference());
+      future2.complete(user2Response);
+      waitingFutures.remove(user2RequestId);
+      log.info("Completed future for user {} via pub/sub", user2Id);
+    }
   }
+
+  // Cancels a pending match request due to a cancel-notification event
+  public void handleCancelNotification(String oldRequestId) {
+
+    CompletableFuture<UserPreferenceResponse> oldFuture = waitingFutures.get(oldRequestId);
+    if (oldFuture == null) {
+      log.info("Cancel-notification ignored: no pending request with requestId {}", oldRequestId);
+      return;
+    }
+
+    oldFuture.complete(null);
+    waitingFutures.remove(oldRequestId);
+    log.info("Cancelled old match request with requestId {}", oldRequestId);
+  }
+
 }
