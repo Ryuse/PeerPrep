@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.peerprep.microservices.matching.deserializers.MatchResultDeserializer;
 import com.peerprep.microservices.matching.model.UserPreference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import lombok.AllArgsConstructor;

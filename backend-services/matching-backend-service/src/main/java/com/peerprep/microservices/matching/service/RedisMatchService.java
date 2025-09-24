@@ -14,7 +14,6 @@ import com.peerprep.microservices.matching.model.UserPreference;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
