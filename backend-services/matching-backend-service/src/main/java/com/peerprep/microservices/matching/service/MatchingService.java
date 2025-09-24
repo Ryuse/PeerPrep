@@ -108,7 +108,7 @@ public class MatchingService {
     CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute(() -> {
       if (!future.isDone()) {
         boolean removed = redisMatchService.remove(userId);
-        waitingFutures.remove(userId);
+        waitingFutures.remove(requestId);
         future.complete(null);
         log.info("User {} match request has timed out", userId);
       }
