@@ -71,5 +71,7 @@ public class UserPreference {
       throw new IllegalArgumentException("minTime must be > 0");
     if (maxTime <= 0)
       throw new IllegalArgumentException("maxTime must be > 0");
+    if (maxTime < minTime)
+      throw new IllegalArgumentException("maxTime must be >= minTime");
   }
 }
