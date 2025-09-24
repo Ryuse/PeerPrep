@@ -152,8 +152,10 @@ public class MatchingService {
   public void handleMatchNotification(MatchNotification matchResult) {
     String user1RequestId = matchResult.getUser1RequestId();
     String user2RequestId = matchResult.getUser2RequestId();
-    String user1Id = matchResult.getUser1Preference().getUserId();
-    String user2Id = matchResult.getUser2Preference().getUserId();
+    UserPreference user1Pref = matchResult.getUser1Preference();
+    UserPreference user2Pref = matchResult.getUser2Preference();
+    String user1Id = user1Pref.getUserId();
+    String user2Id = user2Pref.getUserId();
 
     log.info("Handling match notification for users {} and {}",
         user1Id,
@@ -163,11 +165,12 @@ public class MatchingService {
     CompletableFuture<UserPreferenceResponse> future1 = waitingFutures.get(user1RequestId);
     CompletableFuture<UserPreferenceResponse> future2 = waitingFutures.get(user2RequestId);
 
-    log.info("Futures: {}, {}", future1, future2); // Both futures are null when I test with two different users.
+    log.info("Futures: {}, {}", future1, future2);
 
     if (future1 != null && !future1.isDone()) {
       log.info("Completing future for user {} via pub/sub", user1Id);
-      UserPreferenceResponse user1Response = userPreferenceService.mapToResponse(matchResult.getUser1Preference());
+      UserPreference overlappingPreference = user1Pref.getOverlap(user2Pref);
+      UserPreferenceResponse user1Response = userPreferenceService.mapToResponse(overlappingPreference);
       future1.complete(user1Response);
       waitingFutures.remove(user1RequestId);
       log.info("Completed future for user {} via pub/sub", user1Id);
@@ -175,7 +178,8 @@ public class MatchingService {
 
     if (future2 != null && !future2.isDone()) {
       log.info("Completing future for user {} via pub/sub", user2Id);
-      UserPreferenceResponse user2Response = userPreferenceService.mapToResponse(matchResult.getUser1Preference());
+      UserPreference overlappingPreference = user2Pref.getOverlap(user1Pref);
+      UserPreferenceResponse user2Response = userPreferenceService.mapToResponse(overlappingPreference);
       future2.complete(user2Response);
       waitingFutures.remove(user2RequestId);
       log.info("Completed future for user {} via pub/sub", user2Id);

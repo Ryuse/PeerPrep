@@ -74,4 +74,35 @@ public class UserPreference {
     if (maxTime < minTime)
       throw new IllegalArgumentException("maxTime must be >= minTime");
   }
+
+  /**
+   * Returns a new UserPreference containing only the overlapping topics and
+   * difficulties
+   * between this user and another user.
+   */
+  public UserPreference getOverlap(UserPreference other) {
+    Set<String> overlappingTopics = new HashSet<>(this.topics);
+    overlappingTopics.retainAll(other.topics);
+
+    Set<String> overlappingDifficulties = new HashSet<>(this.difficulties);
+    overlappingDifficulties.retainAll(other.difficulties);
+
+    // Calculate overlapping time range
+    int overlapMinTime = Math.max(this.minTime, other.minTime);
+    int overlapMaxTime = Math.min(this.maxTime, other.maxTime);
+
+    // Make sure minTime <= maxTime
+    if (overlapMinTime > overlapMaxTime) {
+      // No valid overlap, handle as empty or fallback
+      overlapMinTime = overlapMaxTime;
+    }
+
+    return UserPreference.builder()
+        .userId(other.userId)
+        .topics(overlappingTopics)
+        .difficulties(overlappingDifficulties)
+        .minTime(overlapMinTime)
+        .maxTime(overlapMaxTime)
+        .build();
+  }
 }
