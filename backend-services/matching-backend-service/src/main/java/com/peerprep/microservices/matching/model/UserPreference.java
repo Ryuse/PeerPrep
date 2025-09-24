@@ -1,5 +1,6 @@
 package com.peerprep.microservices.matching.model;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
@@ -7,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,9 +25,11 @@ public class UserPreference {
   private final String userId;
 
   @NonNull
+  @JsonDeserialize(as = HashSet.class)
   private final Set<String> topics;
 
   @NonNull
+  @JsonDeserialize(as = HashSet.class)
   private final Set<String> difficulties;
 
   private final int minTime;
