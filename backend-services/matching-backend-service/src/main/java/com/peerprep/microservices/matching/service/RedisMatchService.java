@@ -131,7 +131,7 @@ public class RedisMatchService {
       throw new UserPreferenceSerializationException("Failed to serialize UserPreference", e);
     }
 
-    // Atomatically finds a match and removes the match entry
+    // Atomically finds a match and removes the match entry
     String resultJson = redisTemplate.execute(matchScript,
         Collections.singletonList(MATCH_POOL_KEY),
         reqJson, USER_PREF_KEY_PREFIX);
