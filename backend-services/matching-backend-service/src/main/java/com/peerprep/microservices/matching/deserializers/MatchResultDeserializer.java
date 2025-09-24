@@ -8,17 +8,17 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.peerprep.microservices.matching.dto.MatchResult;
+import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.model.UserPreference;
 
-public class MatchResultDeserializer extends StdDeserializer<MatchResult> {
+public class MatchResultDeserializer extends StdDeserializer<MatchNotification> {
 
   public MatchResultDeserializer() {
-    super(MatchResult.class);
+    super(MatchNotification.class);
   }
 
   @Override
-  public MatchResult deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+  public MatchNotification deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
     JsonNode node = jp.getCodec().readTree(jp);
 
     String user1RequestId = node.has("user1RequestId") ? node.get("user1RequestId").asText(null) : null;
@@ -51,7 +51,7 @@ public class MatchResultDeserializer extends StdDeserializer<MatchResult> {
           "Missing required field: user2Preference in MatchResult JSON: " + node.toString());
     }
 
-    return new MatchResult(user1RequestId, user2RequestId, user1Pref, user2Pref);
+    return new MatchNotification(user1RequestId, user2RequestId, user1Pref, user2Pref);
   }
 
   private static java.util.Set<String> readSet(JsonNode arrayNode) {

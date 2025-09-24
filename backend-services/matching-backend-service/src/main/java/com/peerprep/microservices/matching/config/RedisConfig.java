@@ -16,7 +16,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peerprep.microservices.matching.dto.MatchResult;
+import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.event.MatchNotificationListener;
 import com.peerprep.microservices.matching.service.MatchingService;

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DataFormatReaders.Match;
-import com.peerprep.microservices.matching.dto.MatchResult;
+import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.service.MatchingService;
 
 import lombok.RequiredArgsConstructor;
@@ -39,19 +39,19 @@ public class MatchNotificationListener implements MessageListener {
   private void processMatchNotification(String body) {
     log.debug("Received match notification: {}", body);
 
-    MatchResult matchResult = null;
+    MatchNotification matchNotification = null;
     try {
       String unwrapped = objectMapper.readValue(body, String.class);
-      matchResult = objectMapper.readValue(unwrapped, MatchResult.class);
+      matchNotification = objectMapper.readValue(unwrapped, MatchNotification.class);
 
     } catch (Exception e) {
       log.error("Error processing match notification", e);
     }
 
-    matchingService.handleMatchNotification(matchResult);
+    matchingService.handleMatchNotification(matchNotification);
     log.info("Processed match notification for {} & {}",
-        matchResult.getUser1Preference().getUserId(),
-        matchResult.getUser2Preference().getUserId());
+        matchNotification.getUser1Preference().getUserId(),
+        matchNotification.getUser2Preference().getUserId());
   }
 
   private void processCancelNotification(String body) {

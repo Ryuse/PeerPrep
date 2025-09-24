@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = MatchResultDeserializer.class)
-public class MatchResult {
+public class MatchNotification {
   private String user1RequestId;
   private String user2RequestId;
   private UserPreference user1Preference;

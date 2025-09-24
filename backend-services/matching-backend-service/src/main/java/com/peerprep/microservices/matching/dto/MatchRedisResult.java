@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MatchResultInfo {
+public class MatchRedisResult {
   private final boolean oldRequestDeleted;
   private final String oldRequestId;
   private final UserPreference matched;
