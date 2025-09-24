@@ -8,12 +8,18 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.peerprep.microservices.matching.dto.MatchResult;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
+import com.peerprep.microservices.matching.event.MatchNotificationListener;
+import com.peerprep.microservices.matching.service.MatchingService;
 
 @Configuration
 public class RedisConfig {
@@ -47,4 +53,21 @@ public class RedisConfig {
     template.afterPropertiesSet();
     return template;
   }
+
+  // ---------- [Listeners] ----------
+  @Bean
+  public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory,
+      MatchNotificationListener messageListener) {
+    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    container.addMessageListener(messageListener, new PatternTopic("match-notifications"));
+    container.addMessageListener(messageListener, new PatternTopic("cancel-notifications"));
+    return container;
+  }
+
+  @Bean
+  public ObjectMapper objectMapper() {
+    return new ObjectMapper();
+  }
+
 }
