@@ -40,6 +40,8 @@ public class MatchingService {
    * timeout happens
    */
   private final Map<String, CompletableFuture<UserPreferenceResponse>> waitingFutures = new ConcurrentHashMap<>();
+  private final Map<String, String> userRequestIds = new ConcurrentHashMap<>();
+  private final Map<String, String> requestToUser = new ConcurrentHashMap<>();
 
   private static final String MATCH_CHANNEL = "match-notifications";
   private static final String CANCEL_CHANNEL = "cancel-notifications";
@@ -92,6 +94,8 @@ public class MatchingService {
 
     // Match found immediately
     if (matchedPref != null) {
+      log.info("Match found immediately for user {} with requestId {}. matched with user {}",
+          userId, requestId, matchedPref.getUserId());
       // Publish notification to all instances
       MatchNotification matchResult = new MatchNotification(requestId, matchedRequestId, pref, matchedPref);
       publishMatchNotification(matchResult);
@@ -103,6 +107,9 @@ public class MatchingService {
 
     // No match found - user added to pool, store future for later completion
     waitingFutures.put(requestId, future);
+    userRequestIds.put(userId, requestId);
+    requestToUser.put(requestId, userId);
+    log.info("No match found immediately for user {}, added to pool with requestId {}", userId, requestId);
 
     // Timeout handling
     CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute(() -> {
@@ -123,12 +130,13 @@ public class MatchingService {
    * @throws NoPendingMatchRequestException if no pending request exists
    */
   public void cancelMatchRequest(String userId) {
-    boolean removed = redisMatchService.remove(userId);
-    if (!removed) {
+    String requestId = userRequestIds.get(userId);
+    if (requestId == null) {
       throw new NoPendingMatchRequestException(userId);
     }
 
-    publishCancelNotification(userId);
+    publishCancelNotification(requestId);
+    log.info("Cancelled match request for user {} with requestId {}", userId, requestId);
   }
 
   // ---------- [Event Handlers] ----------
@@ -196,7 +204,11 @@ public class MatchingService {
     }
 
     oldFuture.complete(null);
-    waitingFutures.remove(oldRequestId);
+    String userId = requestToUser.remove(oldRequestId);
+    if (userId != null) {
+      userRequestIds.remove(userId);
+    }
+
     log.info("Cancelled old match request with requestId {}", oldRequestId);
   }
 
