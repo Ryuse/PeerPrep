@@ -19,6 +19,7 @@ dist-ssr/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 .DS_Store
 *.suo
@@ -32,6 +33,9 @@ dist-ssr/
 **/*.backup.*
 **/*.back.*
 *.sublime*
+
+# Environment variables
+**/.env
 
 # Design files
 *.psd

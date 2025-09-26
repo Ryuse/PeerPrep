@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import QuestionAttemptTable from "historyUiService/QuestionAttemptTable";
 import QuestionDisplay from "questionUiService/QuestionDisplay";
@@ -12,7 +11,7 @@ const QuestionAttemptsPage: React.FC = () => {
         <div className="flex-1">
           <QuestionDisplay question={mockQuestions[0]} />
         </div>
-        
+
         {/* Right Column (QuestionAttemptTable) */}
         <div className="flex-2">
           <QuestionAttemptTable />

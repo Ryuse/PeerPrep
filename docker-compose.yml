@@ -1,11 +1,10 @@
-
 services:
   ui-shell:
     build:
       context: ./ui-shell
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile
     ports:
-      - "5173:5173"   
+      - "5173:5173"
     depends_on:
       - matching-ui
       - questions-ui
@@ -13,7 +12,7 @@ services:
       - user-ui
       - history-ui
     container_name: peerprep-ui-shell
-    
+
   matching-ui:
     build:
       context: ./ui-services/matching-ui-service
@@ -52,3 +51,12 @@ services:
     ports:
       - "5178:5178"
     container_name: peerprep-history-ui
+  question-backend-service:
+    build:
+      context: ./backend-services/question-backend-service
+      dockerfile: Dockerfile
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+    ports:
+      - "5275:5275"
+    container_name: peerprep-question-backend
