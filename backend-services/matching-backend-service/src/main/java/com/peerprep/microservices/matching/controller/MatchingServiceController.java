@@ -105,14 +105,17 @@ public class MatchingServiceController {
 
     // Request a match asynchronously
     return matchingService.requestMatchAsync(userPreferenceRequest, timeoutMs)
-        .thenApply(matchResult -> {
-          if (matchResult == null) {
-            // No match found within timeout
-            return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body("No match found, matchmaking request has timed out");
+        .thenApply(outcome -> {
+          switch (outcome.getStatus()) {
+            case MATCHED:
+              return ResponseEntity.ok(outcome.getMatch());
+            case TIMEOUT:
+              return ResponseEntity.status(HttpStatus.ACCEPTED).body("No match found (timeout)");
+            case CANCELLED:
+              return ResponseEntity.status(HttpStatus.GONE).body("Match request was cancelled");
+            default:
+              return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unknown status");
           }
-          // Match found immediately
-          return ResponseEntity.ok(matchResult);
         });
   }
 

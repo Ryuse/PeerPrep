@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.dto.MatchRedisResult;
+import com.peerprep.microservices.matching.dto.MatchOutcome;
 import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.ExistingPendingMatchRequestException;
@@ -39,7 +40,7 @@ public class MatchingService {
    * Waiting futures is still needed so we can remove users from cache when
    * timeout happens
    */
-  private final Map<String, CompletableFuture<UserPreferenceResponse>> waitingFutures = new ConcurrentHashMap<>();
+  private final Map<String, CompletableFuture<MatchOutcome>> waitingFutures = new ConcurrentHashMap<>();
   private final Map<String, String> userRequestIds = new ConcurrentHashMap<>();
   private final Map<String, String> requestToUser = new ConcurrentHashMap<>();
 
@@ -64,13 +65,13 @@ public class MatchingService {
    * @throws ExistingPendingMatchRequestException if the user already has a
    *                                              pending match request.
    */
-  public CompletableFuture<UserPreferenceResponse> requestMatchAsync(UserPreferenceRequest request, long timeoutMs) {
+  public CompletableFuture<MatchOutcome> requestMatchAsync(UserPreferenceRequest request, long timeoutMs) {
     UserPreference pref = userPreferenceService.mapToUserPreference(request);
     String userId = pref.getUserId();
     String requestId = UUID.randomUUID().toString(); // generate unique request id
     log.info("User {} is requesting a match with requestId {}", userId, requestId);
 
-    CompletableFuture<UserPreferenceResponse> future = new CompletableFuture<>();
+    CompletableFuture<MatchOutcome> future = new CompletableFuture<>();
 
     // Call Lua script with requestId embedded
     MatchRedisResult matchRedisResult = redisMatchService.match(pref, requestId);
@@ -101,7 +102,8 @@ public class MatchingService {
       publishMatchNotification(matchResult);
 
       // Complete this instance's future immediately
-      future.complete(userPreferenceService.mapToResponse(matchedPref));
+      UserPreferenceResponse response = userPreferenceService.mapToResponse(matchRedisResult.getMatched());
+      future.complete(new MatchOutcome(MatchOutcome.Status.MATCHED, response));
       return future;
     }
 
@@ -116,7 +118,7 @@ public class MatchingService {
       if (!future.isDone()) {
         boolean removed = redisMatchService.remove(userId);
         waitingFutures.remove(requestId);
-        future.complete(null);
+        future.complete(new MatchOutcome(MatchOutcome.Status.TIMEOUT, null));
         log.info("User {} match request has timed out", userId);
       }
     });
@@ -165,13 +167,11 @@ public class MatchingService {
     String user1Id = user1Pref.getUserId();
     String user2Id = user2Pref.getUserId();
 
-    log.info("Handling match notification for users {} and {}",
-        user1Id,
-        user2Id);
+    log.info("Handling match notification for users {} and {}", user1Id, user2Id);
     log.info("Request IDs: {} and {}", user1RequestId, user2RequestId);
 
-    CompletableFuture<UserPreferenceResponse> future1 = waitingFutures.get(user1RequestId);
-    CompletableFuture<UserPreferenceResponse> future2 = waitingFutures.get(user2RequestId);
+    CompletableFuture<MatchOutcome> future1 = waitingFutures.remove(user1RequestId);
+    CompletableFuture<MatchOutcome> future2 = waitingFutures.remove(user2RequestId);
 
     log.info("Futures: {}, {}", future1, future2);
 
@@ -179,8 +179,8 @@ public class MatchingService {
       log.info("Completing future for user {} via pub/sub", user1Id);
       UserPreference overlappingPreference = user1Pref.getOverlap(user2Pref);
       UserPreferenceResponse user1Response = userPreferenceService.mapToResponse(overlappingPreference);
-      future1.complete(user1Response);
-      waitingFutures.remove(user1RequestId);
+      future1.complete(new MatchOutcome(MatchOutcome.Status.MATCHED, user1Response));
+      userRequestIds.remove(user1Id);
       log.info("Completed future for user {} via pub/sub", user1Id);
     }
 
@@ -188,8 +188,8 @@ public class MatchingService {
       log.info("Completing future for user {} via pub/sub", user2Id);
       UserPreference overlappingPreference = user2Pref.getOverlap(user1Pref);
       UserPreferenceResponse user2Response = userPreferenceService.mapToResponse(overlappingPreference);
-      future2.complete(user2Response);
-      waitingFutures.remove(user2RequestId);
+      future2.complete(new MatchOutcome(MatchOutcome.Status.MATCHED, user2Response));
+      userRequestIds.remove(user2Id);
       log.info("Completed future for user {} via pub/sub", user2Id);
     }
   }
@@ -197,13 +197,16 @@ public class MatchingService {
   // Cancels a pending match request due to a cancel-notification event
   public void handleCancelNotification(String oldRequestId) {
 
-    CompletableFuture<UserPreferenceResponse> oldFuture = waitingFutures.get(oldRequestId);
+    CompletableFuture<MatchOutcome> oldFuture = waitingFutures.get(oldRequestId);
     if (oldFuture == null) {
       log.info("Cancel-notification ignored: no pending request with requestId {}", oldRequestId);
       return;
     }
 
-    oldFuture.complete(null);
+    if (oldFuture != null && !oldFuture.isDone()) {
+      oldFuture.complete(new MatchOutcome(MatchOutcome.Status.CANCELLED, null));
+    }
+
     String userId = requestToUser.remove(oldRequestId);
     if (userId != null) {
       userRequestIds.remove(userId);
