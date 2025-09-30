@@ -7,8 +7,6 @@ import StartMatching from "@/components/StartMatching";
 import type { MatchingResponse, UserPreferences } from "@/api/matchingService";
 import { cancelMatch } from "@/api/matchingService";
 
-
-
 type PageView = "initial" | "preferences" | "matching" | "matchFound";
 
 interface User {
@@ -23,7 +21,6 @@ interface User {
 interface MatchingPageProps {
   user: User | null;
 }
-
 
 const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
   // const { user } = useAuth();
@@ -40,7 +37,6 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
   }
 
   const username = user.username;
-
 
   const handleStartMatching = (): void => {
     setCurrentView("preferences");
