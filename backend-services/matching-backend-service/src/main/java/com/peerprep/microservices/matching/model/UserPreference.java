@@ -1,5 +1,6 @@
 package com.peerprep.microservices.matching.model;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
@@ -7,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,9 +25,11 @@ public class UserPreference {
   private final String userId;
 
   @NonNull
+  @JsonDeserialize(as = HashSet.class)
   private final Set<String> topics;
 
   @NonNull
+  @JsonDeserialize(as = HashSet.class)
   private final Set<String> difficulties;
 
   private final int minTime;
@@ -67,5 +71,38 @@ public class UserPreference {
       throw new IllegalArgumentException("minTime must be > 0");
     if (maxTime <= 0)
       throw new IllegalArgumentException("maxTime must be > 0");
+    if (maxTime < minTime)
+      throw new IllegalArgumentException("maxTime must be >= minTime");
+  }
+
+  /**
+   * Returns a new UserPreference containing only the overlapping topics and
+   * difficulties
+   * between this user and another user.
+   */
+  public UserPreference getOverlap(UserPreference other) {
+    Set<String> overlappingTopics = new HashSet<>(this.topics);
+    overlappingTopics.retainAll(other.topics);
+
+    Set<String> overlappingDifficulties = new HashSet<>(this.difficulties);
+    overlappingDifficulties.retainAll(other.difficulties);
+
+    // Calculate overlapping time range
+    int overlapMinTime = Math.max(this.minTime, other.minTime);
+    int overlapMaxTime = Math.min(this.maxTime, other.maxTime);
+
+    // Make sure minTime <= maxTime
+    if (overlapMinTime > overlapMaxTime) {
+      // No valid overlap, handle as empty or fallback
+      overlapMinTime = overlapMaxTime;
+    }
+
+    return UserPreference.builder()
+        .userId(other.userId)
+        .topics(overlappingTopics)
+        .difficulties(overlappingDifficulties)
+        .minTime(overlapMinTime)
+        .maxTime(overlapMaxTime)
+        .build();
   }
 }
