@@ -1,9 +1,7 @@
-import MatchingPage from "@/pages/MatchingUi";
 
 function App() {
   return (
     <>
-      <MatchingPage />
     </>
   );
 }
