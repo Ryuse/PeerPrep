@@ -8,19 +8,22 @@ export interface UserPreferences {
 
 export interface MatchingResponse {
   matchedUserId?: string;
-  [key: string]: any;
+  topics: string[];
+  difficulties: string[];
+  minTime: number;
+  maxTime: number;
 }
 
 export type MatchResult =
   | { status: "found"; data: MatchingResponse }
   | { status: "notFound" }
   | { status: "cancelled" }
-  | { status: "error"; error: any };
+  | { status: "error"; error: unknown };
 
 export type PreferenceResult =
   | { status: "found"; data: UserPreferences }
   | { status: "notFound" }
-  | { status: "error"; error: any };
+  | { status: "error"; error: unknown };
 
 async function handleMatchResponse(response: Response): Promise<MatchResult> {
   if (response.status === 404) {
@@ -79,7 +82,7 @@ export async function requestMatch(
 
 export async function cancelMatch(
   userId: string,
-): Promise<null | { status: string; error: any }> {
+): Promise<null | { status: string; error: unknown }> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}matches/${userId}`;
 
