@@ -2,7 +2,6 @@
 -- KEYS[1] = poolKey (matchmaking:pool)
 -- ARGV[1] = requestJson (serialized UserPreference with requestId)
 -- ARGV[2] = userPrefKeyPrefix (userpref:)
-
 local poolKey = KEYS[1]
 local requestJson = ARGV[1]
 local userPrefKeyPrefix = ARGV[2] or "userpref:"
@@ -13,7 +12,9 @@ end
 
 -- Parse request JSON
 local reqWrapper
-local success, err = pcall(function() reqWrapper = cjson.decode(requestJson) end)
+local success, err = pcall(function()
+    reqWrapper = cjson.decode(requestJson)
+end)
 if not success or not reqWrapper or not reqWrapper.userPreference or not reqWrapper.requestId then
     redis.log(redis.LOG_WARNING, "Failed to decode request JSON or missing fields: " .. (err or "unknown"))
     return nil
@@ -21,7 +22,7 @@ end
 
 local req = reqWrapper.userPreference
 local requestId = reqWrapper.requestId
-req.requestId = requestId  -- attach requestId back to req for convenience
+req.requestId = requestId -- attach requestId back to req for convenience
 local userId = req.userId
 
 local oldRequestDeleted = false
@@ -48,7 +49,9 @@ local function toSet(arr)
     local s = {}
     if arr and type(arr) == "table" then
         for _, v in ipairs(arr) do
-            if v then s[v] = true end
+            if v then
+                s[v] = true
+            end
         end
     end
     return s
@@ -58,7 +61,9 @@ local function hasOverlap(arr1, arr2)
     local set1 = toSet(arr1)
     if arr2 and type(arr2) == "table" then
         for _, v in ipairs(arr2) do
-            if set1[v] then return true end
+            if set1[v] then
+                return true
+            end
         end
     end
     return false
@@ -75,7 +80,9 @@ for _, candidateId in ipairs(candidates) do
         local candidateJson = redis.call("GET", userPrefKeyPrefix .. candidateId)
         if candidateJson then
             local candidateWrapper
-            local parseSuccess, parseErr = pcall(function() candidateWrapper = cjson.decode(candidateJson) end)
+            local parseSuccess, parseErr = pcall(function()
+                candidateWrapper = cjson.decode(candidateJson)
+            end)
             if parseSuccess and candidateWrapper then
                 local candidate = candidateWrapper.userPreference
                 local timeOverlap = true
@@ -90,13 +97,12 @@ for _, candidateId in ipairs(candidates) do
                     redis.call("DEL", userPrefKeyPrefix .. candidateId)
                     redis.log(redis.LOG_NOTICE, "Match found: " .. userId .. " with " .. candidateId)
 
-
                     return cjson.encode({
                         matched = {
                             userPreference = candidate,
                             requestId = candidateWrapper.requestId
                         },
-                        selfRequestId = requestId,       -- the current request's ID
+                        selfRequestId = requestId, -- the current request's ID
                         oldRequestDeleted = oldRequestDeleted,
                         oldRequestId = oldRequestId
                     })

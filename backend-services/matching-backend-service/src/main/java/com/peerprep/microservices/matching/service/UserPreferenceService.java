@@ -1,30 +1,11 @@
 package com.peerprep.microservices.matching.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.connection.ReturnType;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
-import com.peerprep.microservices.matching.exception.ExistingPendingMatchRequestException;
-import com.peerprep.microservices.matching.exception.InvalidUserPreferenceException;
-import com.peerprep.microservices.matching.exception.NoPendingMatchRequestException;
-import com.peerprep.microservices.matching.exception.UserPreferenceMappingException;
 import com.peerprep.microservices.matching.exception.UserPreferenceNotFoundException;
 import com.peerprep.microservices.matching.model.UserPreference;
 import com.peerprep.microservices.matching.repository.MatchingRepository;
@@ -32,15 +13,19 @@ import com.peerprep.microservices.matching.repository.MatchingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Service for managing user preferences, including creation, retrieval,
+ * updating, and deletion of preferences.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserPreferenceService {
 
   private final MatchingRepository userPreferenceRepository;
-  private final RedisTemplate<String, Object> redisTemplate;
 
   // ---------- [User Preference] ----------
+
   /**
    * Update an existing user preference, or create a new one if it does not exist.
    *
@@ -92,10 +77,6 @@ public class UserPreferenceService {
   /**
    * Converts a {@link UserPreferenceRequest} DTO into a {@link UserPreference}
    * model.
-   * <p>
-   * The method copies all fields from the request object and constructs a new
-   * {@link UserPreference} instance using the builder, ensuring immutability
-   * of the sets.
    *
    * @param userPref the {@link UserPreferenceRequest} containing user preference
    *                 data
@@ -115,8 +96,6 @@ public class UserPreferenceService {
   /**
    * Converts a {@link UserPreference} model into a {@link UserPreferenceResponse}
    * DTO.
-   * <p>
-   * This is useful for sending user preference data back in API responses.
    *
    * @param userPreference the {@link UserPreference} to convert
    * @return a {@link UserPreferenceResponse} instance containing the same data

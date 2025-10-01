@@ -45,7 +45,7 @@ Service will be available at:
 
 ### 1. Submit a Match Request
 
-`POST /api/match/request`
+`POST /api/v1/matching-service/matches`
 
 **Request body:**
 
@@ -94,7 +94,7 @@ No match found (timeout)
 
 ### 2. Cancel a Match Request
 
-`DELETE /api/match/cancel-match/{requestId}`
+`DELETE /api/v1/matching-service/matches/{userId}`
 HTTP Status: 204 No Content
 **Response:**
 
@@ -106,7 +106,7 @@ HTTP Status: 204 No Content
 
 ### 3. Get User Preference (for loading preferences)
 
-`GET /api/matching-service/{userId}`
+`GET /api/v1/matching-service/preferences/{userId}`
 
 **Response:**
 HTTP Status: 200 OK
@@ -120,6 +120,32 @@ HTTP Status: 200 OK
   "maxTime": 200
 }
 ```
+
+### 4. Delete User Preference
+
+`DELETE /api/v1/matching-service/preferences/{userId}`
+
+**Response:**
+HTTP Status: 204 No Content
+
+### 5. Create/Update User Preference
+
+`PUT /api/v1/matching-service/preferences`
+
+**Request Body:**
+
+```json
+{
+  "userId": "user123",
+  "topics": ["Easy"],
+  "difficulties": ["Medium"],
+  "minTime": 100,
+  "maxTime": 200
+}
+```
+
+**Response:**
+HTTP Status: 200 OK
 
 ---
 
