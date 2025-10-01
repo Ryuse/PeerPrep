@@ -49,7 +49,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [view]);
+  }, [view, messages.length]);
 
   // Match request
   useEffect(() => {
@@ -79,6 +79,7 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
             break;
         }
       } catch (err) {
+        console.error("Match request failed:", err);
         if (!aborted) {
           setView("matchError");
         }
