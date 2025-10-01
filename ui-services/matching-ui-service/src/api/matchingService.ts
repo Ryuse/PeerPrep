@@ -60,14 +60,9 @@ async function handlePreferenceResponse(
 }
 export async function requestMatch(
   preferences: UserPreferences,
-): Promise<
-  | { status: "found"; data: MatchingResponse }
-  | { status: "notFound" }
-  | { status: "cancelled" }
-  | { status: "error"; error: any }
-> {
+): Promise<MatchResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-  const uriLink = `${apiUri}request-match/${preferences.userId}`;
+  const uriLink = `${apiUri}matches`;
 
   try {
     const response = await fetch(uriLink, {
@@ -86,7 +81,7 @@ export async function cancelMatch(
   userId: string,
 ): Promise<null | { status: string; error: any }> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-  const uriLink = `${apiUri}cancel-match/${userId}`;
+  const uriLink = `${apiUri}matches/${userId}`;
 
   try {
     const response = await fetch(uriLink, {
@@ -109,7 +104,7 @@ export async function requestPreference(
   userId: string,
 ): Promise<PreferenceResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-  const uriLink = `${apiUri}${userId}`;
+  const uriLink = `${apiUri}preferences/${userId}`;
 
   try {
     const response = await fetch(uriLink, {
@@ -128,7 +123,7 @@ export async function createPreference(
   preferences: UserPreferences,
 ): Promise<PreferenceResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-  const uriLink = `${apiUri}${userId}`;
+  const uriLink = `${apiUri}preferences/${userId}`;
 
   try {
     const response = await fetch(uriLink, {
