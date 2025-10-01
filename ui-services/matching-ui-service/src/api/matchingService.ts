@@ -7,7 +7,7 @@ export interface UserPreferences {
 }
 
 export interface MatchingResponse {
-  matchedUserId?: string;
+  userId: string;
   topics: string[];
   difficulties: string[];
   minTime: number;
@@ -32,6 +32,11 @@ async function handleMatchResponse(response: Response): Promise<MatchResult> {
   if (response.status === 410) {
     return { status: "cancelled" };
   }
+
+  if (response.status == 202) {
+    return { status: "notFound" };
+  }
+
   if (!response.ok) {
     return { status: "error", error: `HTTP error ${response.status}` };
   }
