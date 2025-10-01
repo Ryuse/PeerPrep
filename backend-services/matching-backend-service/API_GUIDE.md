@@ -128,12 +128,12 @@ HTTP Status: 200 OK
 **Response:**
 HTTP Status: 204 No Content
 
-
 ### 5. Create/Update User Preference
 
 `PUT /api/v1/matching-service/preferences`
 
 **Request Body:**
+
 ```json
 {
   "userId": "user123",
@@ -146,7 +146,6 @@ HTTP Status: 204 No Content
 
 **Response:**
 HTTP Status: 200 OK
-
 
 ---
 
