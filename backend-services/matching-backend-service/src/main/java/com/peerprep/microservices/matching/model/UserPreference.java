@@ -10,11 +10,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * Represents user preferences for matching.
+ */
 @Document(value = "userPreference")
 @Getter
 @Builder
@@ -35,6 +37,9 @@ public class UserPreference {
   private final int minTime;
   private final int maxTime;
 
+  /**
+   * Custom build method
+   */
   public static class UserPreferenceBuilder {
     public UserPreference build() {
       validate(userId, topics, difficulties, minTime, maxTime);
@@ -42,6 +47,15 @@ public class UserPreference {
     }
   }
 
+  /**
+   * Constructor with validation
+   * 
+   * @param userId
+   * @param topics
+   * @param difficulties
+   * @param minTime
+   * @param maxTime
+   */
   @JsonCreator
   public UserPreference(
       @JsonProperty("userId") String userId,
@@ -77,8 +91,7 @@ public class UserPreference {
 
   /**
    * Returns a new UserPreference containing only the overlapping topics and
-   * difficulties
-   * between this user and another user.
+   * difficulties between this user and another user.
    */
   public UserPreference getOverlap(UserPreference other) {
     Set<String> overlappingTopics = new HashSet<>(this.topics);
@@ -91,9 +104,7 @@ public class UserPreference {
     int overlapMinTime = Math.max(this.minTime, other.minTime);
     int overlapMaxTime = Math.min(this.maxTime, other.maxTime);
 
-    // Make sure minTime <= maxTime
     if (overlapMinTime > overlapMaxTime) {
-      // No valid overlap, handle as empty or fallback
       overlapMinTime = overlapMaxTime;
     }
 

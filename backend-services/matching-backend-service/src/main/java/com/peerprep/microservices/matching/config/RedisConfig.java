@@ -16,37 +16,52 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.event.MatchNotificationListener;
-import com.peerprep.microservices.matching.service.MatchingService;
 
+/**
+ * Spring configuration for Redis integration.
+ *
+ * Provides beans for caching, Redis templates, and message listener containers
+ * to support both cache-based and pub/sub use cases in the matching service.
+ */
 @Configuration
 public class RedisConfig {
 
+  /**
+   * Configures a {@link RedisCacheManager} for application-level caching.
+   * 
+   *
+   * @param connectionFactory the Redis connection factory
+   * @return the configured Redis cache manager
+   */
   @Bean
-  public RedisCacheManager cacheManage(RedisConnectionFactory connectionFactory) {
+  public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
     RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(Duration.ofMinutes(10))
         .disableCachingNullValues()
         .serializeValuesWith(RedisSerializationContext.SerializationPair
             .fromSerializer(new Jackson2JsonRedisSerializer<>(UserPreferenceResponse.class)));
 
-    return RedisCacheManager.builder(connectionFactory) // <<<<<< use connectionFactory here
+    return RedisCacheManager.builder(connectionFactory)
         .cacheDefaults(redisCacheConfiguration)
         .build();
   }
 
+  /**
+   * Configures a {@link RedisTemplate} for interacting with Redis directly.
+   * 
+   * @param connectionFactory the Redis connection factory
+   * @return the configured Redis template
+   */
   @Bean
   public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
     RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(connectionFactory);
 
-    // Keys = strings
     template.setKeySerializer(new StringRedisSerializer());
     template.setHashKeySerializer(new StringRedisSerializer());
 
-    // Values = JSON
     template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
     template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
 
@@ -54,7 +69,18 @@ public class RedisConfig {
     return template;
   }
 
-  // ---------- [Listeners] ----------
+  /**
+   * Configures a {@link RedisMessageListenerContainer} for subscribing to Redis
+   * pub/sub topics.
+   * 
+   * Subscribes to {@code match-notifications} and {@code cancel-notifications}
+   * topics.
+   * Delegates message handling to {@link MatchNotificationListener}.
+   *
+   * @param connectionFactory the Redis connection factory
+   * @param messageListener   the listener to handle incoming Redis messages
+   * @return the configured message listener container
+   */
   @Bean
   public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory,
       MatchNotificationListener messageListener) {
@@ -65,6 +91,11 @@ public class RedisConfig {
     return container;
   }
 
+  /**
+   * Provides a Jackson {@link ObjectMapper} bean.
+   *
+   * @return a new {@link ObjectMapper} instance
+   */
   @Bean
   public ObjectMapper objectMapper() {
     return new ObjectMapper();
