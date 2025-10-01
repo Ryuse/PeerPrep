@@ -64,12 +64,19 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
 
         if (aborted) return;
 
-        if (result.status === "found") {
-          onMatchFound(result.data);
-        } else if (result.status === "notFound") {
-          setView("matchNotFound");
-        } else if (result.status === "error") {
-          setView("matchError");
+        switch (result.status) {
+          case "found":
+            onMatchFound(result.data);
+            break;
+          case "notFound":
+            setView("matchNotFound");
+            break;
+          case "cancelled":
+            setView("matchError");
+            break;
+          case "error":
+            setView("matchError");
+            break;
         }
       } catch (err) {
         if (!aborted) {

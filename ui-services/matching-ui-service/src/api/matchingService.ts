@@ -14,6 +14,7 @@ export interface MatchingResponse {
 export type MatchResult =
   | { status: "found"; data: MatchingResponse }
   | { status: "notFound" }
+  | { status: "cancelled" }
   | { status: "error"; error: any };
 
 export type PreferenceResult =
@@ -21,33 +22,50 @@ export type PreferenceResult =
   | { status: "notFound" }
   | { status: "error"; error: any };
 
-async function handleResponse<T>(
-  response: Response,
-  notFoundStatus = 404,
-): Promise<
-  | { status: "found"; data: T }
-  | { status: "notFound" }
-  | { status: "error"; error: any }
-> {
-  if (response.status === notFoundStatus) {
+async function handleMatchResponse(response: Response): Promise<MatchResult> {
+  if (response.status === 404) {
     return { status: "notFound" };
   }
-
+  if (response.status === 410) {
+    return { status: "cancelled" };
+  }
   if (!response.ok) {
     return { status: "error", error: `HTTP error ${response.status}` };
   }
 
   try {
-    const data = (await response.json()) as T;
+    const data = (await response.json()) as MatchingResponse;
     return { status: "found", data };
   } catch (err) {
     return { status: "error", error: err };
   }
 }
 
+async function handlePreferenceResponse(
+  response: Response,
+): Promise<PreferenceResult> {
+  if (response.status === 404) {
+    return { status: "notFound" };
+  }
+  if (!response.ok) {
+    return { status: "error", error: `HTTP error ${response.status}` };
+  }
+
+  try {
+    const data = (await response.json()) as UserPreferences;
+    return { status: "found", data };
+  } catch (err) {
+    return { status: "error", error: err };
+  }
+}
 export async function requestMatch(
   preferences: UserPreferences,
-): Promise<MatchResult> {
+): Promise<
+  | { status: "found"; data: MatchingResponse }
+  | { status: "notFound" }
+  | { status: "cancelled" }
+  | { status: "error"; error: any }
+> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
   const uriLink = `${apiUri}request-match/${preferences.userId}`;
 
@@ -58,7 +76,7 @@ export async function requestMatch(
       body: JSON.stringify(preferences),
     });
 
-    return handleResponse<MatchingResponse>(response, 202);
+    return handleMatchResponse(response);
   } catch (err) {
     return { status: "error", error: err };
   }
@@ -99,7 +117,7 @@ export async function requestPreference(
       headers: { "Content-Type": "application/json" },
     });
 
-    return handleResponse<UserPreferences>(response);
+    return handlePreferenceResponse(response);
   } catch (err) {
     return { status: "error", error: err };
   }
@@ -119,7 +137,7 @@ export async function createPreference(
       body: JSON.stringify(preferences),
     });
 
-    return handleResponse<UserPreferences>(response);
+    return handlePreferenceResponse(response);
   } catch (err) {
     return { status: "error", error: err };
   }
