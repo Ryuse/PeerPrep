@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.exception.NotificationDeserializationException;
 import com.peerprep.microservices.matching.exception.NotificationMappingException;
-import com.peerprep.microservices.matching.exception.UserPreferenceDeserializationException;
-import com.peerprep.microservices.matching.exception.UserPreferenceMappingException;
 import com.peerprep.microservices.matching.service.MatchingService;
 
 import lombok.RequiredArgsConstructor;
