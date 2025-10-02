@@ -39,7 +39,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles UserPreferenceMappingException.
+   * Handles UserPreferenceSerializationException.
    * Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(UserPreferenceSerializationException.class)
