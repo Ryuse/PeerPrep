@@ -12,7 +12,6 @@ import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DataFormatReaders.Match;
 import com.peerprep.microservices.matching.dto.MatchNotification;
 import com.peerprep.microservices.matching.dto.MatchRedisResult;
 import com.peerprep.microservices.matching.dto.RemoveResult;
@@ -21,7 +20,6 @@ import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.NoPendingMatchRequestException;
 import com.peerprep.microservices.matching.model.UserPreference;
-import com.peerprep.microservices.matching.repository.MatchingRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +102,7 @@ public class MatchingService {
       // Complete this instance's future immediately. This is needed
       UserPreferenceResponse response = userPreferenceService.mapToResponse(matchRedisResult.getMatched());
       future.complete(new MatchOutcome(MatchOutcome.Status.MATCHED, response));
-      
+
       return future;
     }
 

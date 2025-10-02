@@ -11,7 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Global exception handler for the Matching Service.
- * Handles various custom exceptions and maps them to appropriate HTTP responses.
+ * Handles various custom exceptions and maps them to appropriate HTTP
+ * responses.
  */
 @ControllerAdvice
 @Slf4j
@@ -38,7 +39,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles UserPreferenceMappingException.
+   * Handles UserPreferenceSerializationException.
    * Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(UserPreferenceSerializationException.class)
@@ -48,7 +49,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles UserPreferenceMappingException.
+   * Handles NotificationMappingException.
    * Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(NotificationMappingException.class)
@@ -58,7 +59,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles UserPreferenceMappingException.
+   * Handles NotificationDeserializationException.
    * Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(NotificationDeserializationException.class)
@@ -77,6 +78,7 @@ public class DefaultExceptionHandler {
     log.error("UserPreferenceDeserializationException occurred", ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
   }
+
   /**
    * Handles IOExceptions.
    * Returns a 500 Internal Server Error response.
