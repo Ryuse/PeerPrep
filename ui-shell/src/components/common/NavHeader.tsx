@@ -1,11 +1,15 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import peerPrepIconWhite from "@assets/icon_white.svg";
 import { cn } from "@/lib/utils";
+import LogoutButton from "userUiService/LogoutButton";
+import { useAuth } from "@/data/UserStore";
 
 const NavHeader: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   // Function to apply active/inactive styles
   const getLinkClasses = (path: string) => {
@@ -41,11 +45,12 @@ const NavHeader: React.FC = () => {
           </Link>
         </div>
 
-        <Link to="/">
-          <button className="px-4 py-2 bg-black text-white rounded-lg shadow hover:bg-gray-800 transition">
-            Logout
-          </button>
-        </Link>
+        <LogoutButton
+          onLogOutSuccess={() => {
+            setUser(null);
+            navigate("/");
+          }}
+        />
       </div>
     </nav>
   );

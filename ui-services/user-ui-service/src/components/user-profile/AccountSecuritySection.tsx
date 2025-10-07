@@ -1,8 +1,76 @@
+import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { validatePassword, validateEmail } from "@/utils/InputValidation";
+import type { User } from "@/types/User";
+import { UserService } from "@/api/UserService";
+import { UserServiceApiError } from "@/api/UserServiceErrors";
 
-const AccountSecuritySection = () => {
+interface AccountSecuritySectionProps {
+  user: User;
+  onUserUpdated?: (user: User) => void;
+}
+
+const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
+  user,
+  onUserUpdated,
+}) => {
+  const [email, setEmail] = useState(user.email);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setEmail(user.email);
+  }, [user]);
+
+  const handleChangeEmail = async () => {
+    const error = validateEmail(email);
+    if (error) {
+      setMessage(error);
+      return;
+    }
+    setMessage("");
+    setLoading(true);
+    try {
+      const res = await UserService.updateUser(user.id, { email });
+      setMessage("Email updated successfully!");
+      onUserUpdated?.(res.data);
+    } catch (err) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
+        setMessage(err.message);
+      } else {
+        setMessage("Failed to update email.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    const errors = validatePassword(password);
+    if (errors) {
+      setMessage(errors);
+      return;
+    }
+    setMessage("");
+    setLoading(true);
+    try {
+      const res = await UserService.updateUser(user.id, { password });
+      setPassword("");
+      setMessage("Password updated successfully!");
+      onUserUpdated?.(res.data);
+    } catch (err) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
+        setMessage(err.message);
+      } else {
+        setMessage("Failed to update password.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       <CardHeader>
@@ -17,7 +85,8 @@ const AccountSecuritySection = () => {
             <Input
               id="email"
               type="email"
-              defaultValue="CurrentEmail@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="bg-gray-900 border-gray-700 text-gray-200"
             />
           </div>
@@ -25,8 +94,10 @@ const AccountSecuritySection = () => {
             <Button
               variant="outline"
               className="w-full bg-gray-900 text-gray-200 hover:bg-gray-700 border-gray-700"
+              onClick={handleChangeEmail}
+              disabled={loading}
             >
-              Change email
+              {loading ? "Saving..." : "Change email"}
             </Button>
           </div>
         </div>
@@ -38,7 +109,8 @@ const AccountSecuritySection = () => {
             <Input
               id="password"
               type="password"
-              defaultValue="• • • • • • • •"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="bg-gray-900 border-gray-700 text-gray-200"
             />
           </div>
@@ -46,11 +118,16 @@ const AccountSecuritySection = () => {
             <Button
               variant="outline"
               className="w-full bg-gray-900 text-gray-200 hover:bg-gray-700 border-gray-700"
+              onClick={handleChangePassword}
+              disabled={loading}
             >
-              Change password
+              {loading ? "Saving..." : "Change password"}
             </Button>
           </div>
         </div>
+        {message && (
+          <p className="text-sm text-gray-400 whitespace-pre-line">{message}</p>
+        )}
       </CardContent>
     </>
   );
