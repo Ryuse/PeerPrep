@@ -14,6 +14,7 @@ export interface MatchFoundProps {
   difficulty: string;
   timeMins: number;
   topic: string;
+  acceptanceTimeout: number; // in milliseconds
   onAccept: () => void;
   onReject: () => void;
   isWaiting?: boolean;
@@ -33,13 +34,15 @@ const MatchFound: React.FC<MatchFoundProps> = ({
   difficulty,
   timeMins,
   topic,
+  acceptanceTimeout,
   onAccept,
   onReject,
   isWaiting = false,
   showRejectedDialog = false,
   onDismissRejected,
 }) => {
-  const initialTime = 15;
+  // Convert milliseconds to seconds for display
+  const initialTime = Math.floor(acceptanceTimeout / 1000);
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
   // Timer countdown
@@ -73,9 +76,9 @@ const MatchFound: React.FC<MatchFoundProps> = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Match was not accepted</DialogTitle>
+            <DialogTitle>Match Rejected</DialogTitle>
             <DialogDescription>
-              {matchedName} did not accept the match.
+              {matchedName} has rejected the match.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

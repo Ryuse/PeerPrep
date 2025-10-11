@@ -4,6 +4,7 @@ import type { MatchResult, MatchingResponse } from "@/api/matchingService";
 
 interface MatchSearchProps {
   matchRequestPromise: Promise<MatchResult>;
+  matchRequestTimeout: number; // in milliseconds
   onMatchFound: (matchData: MatchingResponse) => void;
   onMatchError: () => void;
   onMatchNotFound: () => void;
@@ -12,12 +13,15 @@ interface MatchSearchProps {
 
 const MatchingSearch: React.FC<MatchSearchProps> = ({
   matchRequestPromise,
+  matchRequestTimeout,
   onMatchFound,
   onCancel,
   onMatchError,
   onMatchNotFound,
 }) => {
-  const [timeLeft, setTimeLeft] = useState(120);
+  // Convert milliseconds to seconds for display
+  const initialTimeSeconds = Math.floor(matchRequestTimeout / 1000);
+  const [timeLeft, setTimeLeft] = useState(initialTimeSeconds);
   const [messageIndex, setMessageIndex] = useState(0);
   const [view, setView] = useState<
     "searching" | "matchNotFound" | "matchError"

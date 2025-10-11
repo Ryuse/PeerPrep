@@ -227,3 +227,29 @@ export async function rejectMatch(
     throw new Error(`HTTP error ${response.status}`);
   }
 }
+
+export interface TimeoutConfig {
+  matchRequestTimeout: number;
+  matchAcceptanceTimeout: number;
+}
+
+export async function getTimeoutConfig(): Promise<TimeoutConfig> {
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
+  const uriLink = `${apiUri}config`;
+
+  try {
+    const response = await fetch(uriLink, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // The JSON should match the interface
+    return (await response.json()) as TimeoutConfig;
+  } catch (err) {
+    console.error("Failed to fetch timeout config, using defaults:", err);
+    return {
+      matchRequestTimeout: 30_000,
+      matchAcceptanceTimeout: 30_000,
+    };
+  }
+}
