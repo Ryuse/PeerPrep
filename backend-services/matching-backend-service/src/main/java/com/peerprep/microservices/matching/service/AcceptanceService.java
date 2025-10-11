@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.peerprep.microservices.matching.config.MatchingTimeoutConfig;
 import com.peerprep.microservices.matching.config.RedisChannels;
 import com.peerprep.microservices.matching.dto.AcceptanceNotification;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceOutcome;
@@ -30,6 +31,7 @@ public class AcceptanceService {
   private final RedisTemplate<String, Object> redisTemplate;
   private final RedisChannels channels;
   private final ObjectMapper objectMapper;
+  private final MatchingTimeoutConfig timeoutConfig;
 
   /*
    * Map of userId to CompletableFuture for pending match acceptance requests.
@@ -72,7 +74,7 @@ public class AcceptanceService {
     log.info("Connected User {} to match {}", userId, matchId);
 
     // Timeout handling
-    long timeoutMs = 30_000;
+    long timeoutMs = timeoutConfig.getMatchAcceptance();
     CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute(() -> {
       if (!connectFuture.isDone()) {
         log.warn("User {}'s connection to match {} timed out after {} ms. Rejecting..", userId, matchId, timeoutMs);

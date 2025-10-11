@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO representing the outcome of a matching request.
+ * DTO representing the outcome of a matching request. Sent to the Frontend.
  */
 @Data
 @NoArgsConstructor

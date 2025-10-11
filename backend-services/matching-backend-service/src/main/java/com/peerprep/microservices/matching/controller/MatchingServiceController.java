@@ -1,5 +1,7 @@
 package com.peerprep.microservices.matching.controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.http.HttpStatus;
@@ -17,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.peerprep.microservices.matching.dto.MatchAcceptanceRequest;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceResponse;
+import com.peerprep.microservices.matching.config.MatchingTimeoutConfig;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceOutcome;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceStatus;
+import com.peerprep.microservices.matching.dto.TimeoutConfig;
 import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.UserPreferenceNotFoundException;
@@ -40,6 +44,16 @@ public class MatchingServiceController {
   private final MatchingService matchingService;
   private final UserPreferenceService userPreferenceService;
   private final AcceptanceService matchingAcceptanceService;
+  private final MatchingTimeoutConfig timeoutConfig;
+
+  @GetMapping("config")
+  @ResponseStatus(HttpStatus.OK)
+  public TimeoutConfig updateUserPreference() {
+    TimeoutConfig timeoutConfigResponse = new TimeoutConfig(
+        timeoutConfig.getMatchRequest(),
+        timeoutConfig.getMatchAcceptance());
+    return timeoutConfigResponse;
+  }
 
   // ---------- [User Preference] ----------
   /**
@@ -106,7 +120,7 @@ public class MatchingServiceController {
   @PutMapping("/match-requests")
   public CompletableFuture<ResponseEntity<?>> requestMatch(@RequestBody UserPreferenceRequest userPreferenceRequest) {
 
-    long timeoutMs = 30_000;
+    long timeoutMs = timeoutConfig.getMatchRequest();
 
     // Request a match asynchronously
     return matchingService.requestMatchAsync(userPreferenceRequest, timeoutMs)
