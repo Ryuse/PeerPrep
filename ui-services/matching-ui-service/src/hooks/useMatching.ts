@@ -72,7 +72,6 @@ export function useMatching({ username, onNavigate }: UseMatchingProps) {
           onNavigate("/collab");
         }
       } else if (response.status.toUpperCase() === "REJECTED") {
-        // Other user rejected
         setShowRejectedDialog(true);
       }
     } catch (err) {
@@ -108,11 +107,7 @@ export function useMatching({ username, onNavigate }: UseMatchingProps) {
     if (preferences) {
       await cancelMatch(username);
     }
-    setIsWaitingForAcceptance(false);
-    setShowRejectedDialog(false);
-    setMatchData(null);
-    setMatchRequestPromise(null);
-    setCurrentView("initial");
+    resetState();
   };
 
   const handleMatchError = (): void => {
@@ -127,7 +122,15 @@ export function useMatching({ username, onNavigate }: UseMatchingProps) {
 
   const handleDismissRejected = (): void => {
     setShowRejectedDialog(false);
-    handleCancel();
+    resetState();
+  };
+
+  const resetState = () => {
+    setIsWaitingForAcceptance(false);
+    setShowRejectedDialog(false);
+    setMatchData(null);
+    setMatchRequestPromise(null);
+    setCurrentView("initial");
   };
 
   return {
