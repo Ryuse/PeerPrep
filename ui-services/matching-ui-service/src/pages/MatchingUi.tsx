@@ -3,12 +3,17 @@ import QuestionPreferences from "@/components/question-preference/QuestionPrefer
 import MatchFound from "@/components/MatchFound";
 import MatchSearch from "@/components/MatchSearch";
 import StartMatching from "@/components/StartMatching";
-import type { MatchingResponse, UserPreferences } from "@/api/matchingService";
+import type {
+  MatchingResponse,
+  UserPreferences,
+  MatchResult,
+} from "@/api/matchingService";
 import {
   cancelMatch,
   connectMatch,
   acceptMatch,
   rejectMatch,
+  requestMatch,
 } from "@/api/matchingService";
 
 type PageView = "initial" | "preferences" | "matching" | "matchFound";
@@ -33,6 +38,8 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user, onNavigate }) => {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isWaitingForAcceptance, setIsWaitingForAcceptance] = useState(false);
   const [showRejectedDialog, setShowRejectedDialog] = useState(false);
+  const [matchRequestPromise, setMatchRequestPromise] =
+    useState<Promise<MatchResult> | null>(null);
 
   if (!user) {
     return (
@@ -50,6 +57,12 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user, onNavigate }) => {
 
   const handleConfirmPreferences = (prefs: UserPreferences): void => {
     setPreferences(prefs);
+
+    // Start the match request immediately
+    const matchPromise = requestMatch(prefs);
+    setMatchRequestPromise(matchPromise);
+
+    // Move to matching view to show UI
     setCurrentView("matching");
   };
 
@@ -106,12 +119,24 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user, onNavigate }) => {
     setIsWaitingForAcceptance(false);
     setShowRejectedDialog(false);
     setMatchData(null);
+    setMatchRequestPromise(null);
+    setCurrentView("initial");
+  };
+
+  const handleMatchError = (): void => {
+    setMatchRequestPromise(null);
+    setCurrentView("initial");
+  };
+
+  const handleMatchNotFound = (): void => {
+    setMatchRequestPromise(null);
     setCurrentView("initial");
   };
 
   const handleDismissRejected = (): void => {
     setShowRejectedDialog(false);
-    handleCancel();
+    setCurrentView("initial");
+    // handleCancel();
   };
 
   return (
@@ -125,12 +150,13 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user, onNavigate }) => {
           userId={username}
         />
       )}
-      {currentView === "matching" && preferences && (
+      {currentView === "matching" && preferences && matchRequestPromise && (
         <MatchSearch
-          userId={username}
-          preferences={preferences}
+          matchRequestPromise={matchRequestPromise}
           onMatchFound={handleMatchFound}
           onCancel={handleCancel}
+          onMatchNotFound={handleMatchNotFound}
+          onMatchError={handleMatchError}
         />
       )}
       {currentView === "matchFound" && matchData && (
