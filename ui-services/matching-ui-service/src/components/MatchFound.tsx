@@ -62,7 +62,7 @@ const MatchFound: React.FC<MatchFoundProps> = ({
     if (!isWaiting) {
       setTimeLeft(initialTime);
     }
-  }, [isWaiting]);
+  }, [isWaiting, initialTime]);
 
   return (
     <div className="">

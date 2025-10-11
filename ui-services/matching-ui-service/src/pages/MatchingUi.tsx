@@ -19,14 +19,6 @@ interface MatchingPageProps {
 }
 
 const MatchingPage: React.FC<MatchingPageProps> = ({ user, onNavigate }) => {
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Please log in to access matching</p>
-      </div>
-    );
-  }
-
   const {
     currentView,
     matchData,
@@ -44,7 +36,15 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user, onNavigate }) => {
     handleMatchError,
     handleMatchNotFound,
     handleDismissRejected,
-  } = useMatching({ username: user.username, onNavigate });
+  } = useMatching({ username: user?.username ?? "", onNavigate });
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Please log in to access matching</p>
+      </div>
+    );
+  }
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center text-center">
