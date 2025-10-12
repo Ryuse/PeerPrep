@@ -2,18 +2,24 @@ import { useState } from "react";
 import type { User } from "@/types/User";
 import { UserService } from "@/api/UserService";
 import { UserServiceApiError } from "@/api/UserServiceErrors";
+import { Eye, EyeOff } from "lucide-react";
 
 interface LoginFormProps {
   onLoginSuccess?: (user: User) => void;
   onLoginRequireOtp?: (user: User) => void;
+  onCreateAccount: () => void;
+  onForgotPassword: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSuccess,
   onLoginRequireOtp,
+  onCreateAccount,
+  onForgotPassword,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +48,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <form
-      className="bg-white"
+      className="bg-white w-full max-w-md mx-auto"
       onSubmit={(e) => {
         e.preventDefault();
         handleLogin();
@@ -56,13 +62,22 @@ const LoginForm: React.FC<LoginFormProps> = ({
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
-        />
+        <div className="inline-flex items-center w-full rounded-lg border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-blue-400">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="flex-grow px-4 py-3 rounded-l-lg focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((p) => !p)}
+            className="px-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </div>
 
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -77,12 +92,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
           />
           <span className="text-gray-600 text-sm">Remember me</span>
         </label>
-        <a
-          href="/forgotPassword"
-          className="text-orange-500 text-sm hover:underline"
+        <button
+          onClick={() => {
+            onForgotPassword();
+          }}
+          className="text-orange-500 hover:underline focus:outline-none bg-transparent border-none cursor-pointer"
         >
           Forgot password?
-        </a>
+        </button>
       </div>
 
       <button
@@ -98,9 +115,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       <div className="text-center">
-        <a href="/signup" className="text-orange-500 hover:underline">
+        <button
+          onClick={() => {
+            onCreateAccount();
+          }}
+          className="text-orange-500 hover:underline focus:outline-none bg-transparent border-none cursor-pointer"
+        >
           Create an account?
-        </a>
+        </button>
       </div>
     </form>
   );
