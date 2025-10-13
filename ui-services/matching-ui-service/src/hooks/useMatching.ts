@@ -140,7 +140,7 @@ export function useMatching({ username, onNavigate }: UseMatchingProps) {
     if (topics.length === 0) return { topic: "", difficulty: "", timeMins: 0 };
 
     const [firstTopic, difficulties] = topics[0];
-    const difficulty = difficulties[0] || "";
+    const difficulty = difficulties[0];
 
     // Map difficulty to time
     let timeMins = 0;
