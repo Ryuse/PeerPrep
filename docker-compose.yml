@@ -73,14 +73,11 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./backend-services/matching-backend-service/.env
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - MONGODB_URI=${MONGODB_MATCHING_URI}
     ports:
       - "5274:5274"
     depends_on:
       - redis
+
   leetcode-backend-service:
     build:
       context: ./backend-services/leetcode-backend-service
