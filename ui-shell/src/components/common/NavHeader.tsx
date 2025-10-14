@@ -9,7 +9,7 @@ const NavHeader: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const navigate = useNavigate();
-  const { setUser, setIsLoggingOut } = useAuth();
+  const { user, setUser, setIsLoggingOut } = useAuth();
 
   // Function to apply active/inactive styles
   const getLinkClasses = (path: string) => {
@@ -18,7 +18,7 @@ const NavHeader: React.FC = () => {
     const inactiveClasses = "bg-gray-700 hover:bg-gray-600";
     return cn(
       baseClasses,
-      currentPath === path ? activeClasses : inactiveClasses,
+      currentPath === path ? activeClasses : inactiveClasses
     );
   };
 
@@ -43,6 +43,13 @@ const NavHeader: React.FC = () => {
           <Link to="/settings" className={getLinkClasses("/settings")}>
             Settings
           </Link>
+
+          {/* Only show for admins */}
+          {user?.isAdmin && (
+            <Link to="/questions" className={getLinkClasses("/questions")}>
+              Questions
+            </Link>
+          )}
         </div>
 
         <LogoutButton
