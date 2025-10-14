@@ -97,7 +97,7 @@ const QuestionDetailsPage: React.FC<QuestionDetailsPageProps> = ({
             Delete
           </Button>
           <Button
-            onClick={() => onNavigate("/")}
+            onClick={() => onNavigate("/questions")}
             variant="outline"
             className="mb-4 w-24 bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
           >

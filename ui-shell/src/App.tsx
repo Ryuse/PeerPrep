@@ -63,7 +63,7 @@ export default function App() {
         <Route path="/settings" element={<UserProfilePage />} />
       </Route>
       <Route element={<AdminRoute />}>
-       <Route path="/question" element={<QuestionPage />} />
+       <Route path="/questions" element={<QuestionPage />} />
        <Route path="/questions/:id" element={<QuestionDetailsPage />} />
        </Route>
     </Routes>
