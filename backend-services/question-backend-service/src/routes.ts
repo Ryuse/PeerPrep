@@ -219,174 +219,170 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     });
   });
 
+  /**
+   * GET /questions
+   * Supports filtering, pagination, and sorting.
+   */
+  app.get("/questions", async (req, reply) => {
+    // Define schema for validation
+    const QuerySchema = z.object({
+      category: z.string().optional(),
+      difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
+      minTime: z.coerce.number().int().min(1).optional(),
+      maxTime: z.coerce.number().int().min(1).optional(),
+      size: z.coerce.number().int().min(1).max(100).default(10),
+      page: z.coerce.number().int().min(1).default(1),
+      sortBy: z
+        .enum(["newest", "oldest", "easiest", "hardest", "shortest", "longest"])
+        .default("newest"),
+    });
 
-/**
- * GET /questions
- * Supports filtering, pagination, and sorting.
- */
-app.get("/questions", async (req, reply) => {
-  // Define schema for validation
-  const QuerySchema = z.object({
-    category: z.string().optional(),
-    difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
-    minTime: z.coerce.number().int().min(1).optional(),
-    maxTime: z.coerce.number().int().min(1).optional(),
-    size: z.coerce.number().int().min(1).max(100).default(10),
-    page: z.coerce.number().int().min(1).default(1),
-    sortBy: z
-      .enum(["newest", "oldest", "easiest", "hardest", "shortest", "longest"])
-      .default("newest"),
+    // Validate query
+    const parsed = QuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return reply
+        .status(400)
+        .send({ error: "Invalid query params", details: parsed.error.issues });
+    }
+
+    const { category, difficulty, minTime, maxTime, size, page, sortBy } =
+      parsed.data;
+
+    // Build MongoDB query
+    const query: Record<string, any> = {};
+    if (category) query.categoryTitle = category;
+    if (difficulty) query.difficulty = difficulty;
+    if (minTime || maxTime) {
+      query.timeLimit = {};
+      if (minTime) query.timeLimit.$gte = minTime;
+      if (maxTime) query.timeLimit.$lte = maxTime;
+    }
+
+    // Pagination
+    const skip = (page - 1) * size;
+
+    // Sorting
+    const sortOptions: Record<string, 1 | -1> = (() => {
+      switch (sortBy) {
+        case "oldest":
+          return { createdAt: 1 };
+        case "newest":
+          return { createdAt: -1 };
+        case "easiest":
+          return { difficulty: 1 };
+        case "hardest":
+          return { difficulty: -1 };
+        case "shortest":
+          return { timeLimit: 1 };
+        case "longest":
+          return { timeLimit: -1 };
+        default:
+          return { createdAt: -1 };
+      }
+    })();
+
+    try {
+      const [total, questions] = await withDbLimit(async () => {
+        const total = await Question.countDocuments(query);
+        const questions = await Question.find(query)
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(size)
+          .select("title categoryTitle difficulty timeLimit _id")
+          .lean();
+        return [total, questions] as const;
+      });
+
+      const previews = questions.map((q) => ({
+        questionId: q._id.toString(),
+        questionName: q.title,
+        topic: q.categoryTitle ?? "Uncategorized",
+        difficulty: q.difficulty,
+        timeLimit: q.timeLimit?.toString() ?? "-",
+      }));
+
+      return reply.send({
+        page,
+        size,
+        total,
+        questions: previews,
+      });
+    } catch (err) {
+      req.log?.error({ err }, "Failed to fetch questions");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
   });
 
-  // Validate query
-  const parsed = QuerySchema.safeParse(req.query);
-  if (!parsed.success) {
-    return reply
-      .status(400)
-      .send({ error: "Invalid query params", details: parsed.error.issues });
-  }
-
-  const { category, difficulty, minTime, maxTime, size, page, sortBy } =
-    parsed.data;
-
-  // Build MongoDB query
-  const query: Record<string, any> = {};
-  if (category) query.categoryTitle = category;
-  if (difficulty) query.difficulty = difficulty;
-  if (minTime || maxTime) {
-    query.timeLimit = {};
-    if (minTime) query.timeLimit.$gte = minTime;
-    if (maxTime) query.timeLimit.$lte = maxTime;
-  }
-
-  // Pagination
-  const skip = (page - 1) * size;
-
-  // Sorting
-  const sortOptions: Record<string, 1 | -1> = (() => {
-    switch (sortBy) {
-      case "oldest":
-        return { createdAt: 1 };
-      case "newest":
-        return { createdAt: -1 };
-      case "easiest":
-        return { difficulty: 1 };
-      case "hardest":
-        return { difficulty: -1 };
-      case "shortest":
-        return { timeLimit: 1 };
-      case "longest":
-        return { timeLimit: -1 };
-      default:
-        return { createdAt: -1 };
+  /**
+   * GET /questions/categories
+   * Returns a list of distinct categories from questions.
+   */
+  app.get("/questions/categories", async (_req, reply) => {
+    try {
+      const categories = await withDbLimit(() =>
+        Question.distinct("categoryTitle"),
+      );
+      return reply.send({ categories });
+    } catch (err) {
+      _req.log?.error({ err }, "Failed to fetch categories");
+      return reply.status(500).send({ error: "Internal Server Error" });
     }
-  })();
+  });
 
-  try {
-    const [total, questions] = await withDbLimit(async () => {
-      const total = await Question.countDocuments(query);
-      const questions = await Question.find(query)
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(size)
-        .select("title categoryTitle difficulty timeLimit _id")
-        .lean();
-      return [total, questions] as const;
-    });
+  /**
+   * GET /questions/difficulties
+   * Returns all distinct difficulties from questions.
+   */
+  app.get("/questions/difficulties", async (_req, reply) => {
+    try {
+      const difficulties = await withDbLimit(() =>
+        Question.distinct("difficulty"),
+      );
+      return reply.send({ difficulties });
+    } catch (err) {
+      return reply.status(500).send({ error: "Failed to fetch difficulties" });
+    }
+  });
 
-    const previews = questions.map((q) => ({
-      questionId: q._id.toString(),
-      questionName: q.title,
-      topic: q.categoryTitle ?? "Uncategorized",
-      difficulty: q.difficulty,
-      timeLimit: q.timeLimit?.toString() ?? "-",
-    }));
+  /**
+   * GET /questions/:id
+   * Returns full question details for a given ID.
+   */
+  app.get<{
+    Params: { id: string };
+  }>("/questions/:id", async (req, reply) => {
+    const { id } = req.params;
 
-    return reply.send({
-      page,
-      size,
-      total,
-      questions: previews,
-    });
-  } catch (err) {
-    req.log?.error({ err }, "Failed to fetch questions");
-    return reply.status(500).send({ error: "Internal Server Error" });
-  }
-});
-
-/**
- * GET /questions/categories
- * Returns a list of distinct categories from questions.
- */
-app.get("/questions/categories", async (_req, reply) => {
-  try {
-    const categories = await withDbLimit(() =>
-      Question.distinct("categoryTitle")
-    );
-    return reply.send({ categories });
-  } catch (err) {
-    _req.log?.error({ err }, "Failed to fetch categories");
-    return reply.status(500).send({ error: "Internal Server Error" });
-  }
-});
-
-/**
- * GET /questions/difficulties
- * Returns all distinct difficulties from questions.
- */
-app.get("/questions/difficulties", async (_req, reply) => {
-  try {
-    const difficulties = await withDbLimit(() =>
-      Question.distinct("difficulty")
-    );
-    return reply.send({ difficulties });
-  } catch (err) {
-    return reply.status(500).send({ error: "Failed to fetch difficulties" });
-  }
-});
-
-
-/**
- * GET /questions/:id
- * Returns full question details for a given ID.
- */
-app.get<{
-  Params: { id: string };
-}>("/questions/:id", async (req, reply) => {
-  const { id } = req.params;
-
-  // Validate ObjectId
-  if (!Types.ObjectId.isValid(id)) {
-    return reply.status(400).send({ error: "Invalid question ID" });
-  }
-
-  try {
-    const question = await withDbLimit(() =>
-      Question.findById(id).lean()
-    );
-
-    if (!question) {
-      return reply.status(404).send({ error: "Question not found" });
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      return reply.status(400).send({ error: "Invalid question ID" });
     }
 
-    return reply.send({
-      questionId: question._id.toString(),
-      title: question.title,
-      categoryTitle: question.categoryTitle,
-      difficulty: question.difficulty,
-      timeLimit: question.timeLimit,
-      content: question.content,
-      hints: question.hints ?? [],
-      exampleTestcases: question.exampleTestcases ?? "",
-      codeSnippets: question.codeSnippets ?? [],
-      createdAt: question.createdAt,
-      updatedAt: question.updatedAt,
-    });
-  } catch (err) {
-    req.log?.error({ err }, "Failed to fetch question details");
-    return reply.status(500).send({ error: "Internal Server Error" });
-  }
-});
+    try {
+      const question = await withDbLimit(() => Question.findById(id).lean());
+
+      if (!question) {
+        return reply.status(404).send({ error: "Question not found" });
+      }
+
+      return reply.send({
+        questionId: question._id.toString(),
+        title: question.title,
+        categoryTitle: question.categoryTitle,
+        difficulty: question.difficulty,
+        timeLimit: question.timeLimit,
+        content: question.content,
+        hints: question.hints ?? [],
+        exampleTestcases: question.exampleTestcases ?? "",
+        codeSnippets: question.codeSnippets ?? [],
+        createdAt: question.createdAt,
+        updatedAt: question.updatedAt,
+      });
+    } catch (err) {
+      req.log?.error({ err }, "Failed to fetch question details");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
 };
 
 export default leetcodeRoutes;
