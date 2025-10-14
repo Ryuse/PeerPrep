@@ -8,6 +8,13 @@ import {
 } from "@/api/questionService";
 import type { QuestionPreview } from "@/types/QuestionPreview";
 import { DualRangeSlider } from "./ui/dual-range-slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface QuestionListWithFiltersProps {
   onNavigate: (path: string) => void;
@@ -89,43 +96,48 @@ const QuestionListWithFilters: React.FC<QuestionListWithFiltersProps> = ({
         {/* Category Dropdown */}
         <div>
           <p className="font-semibold mb-1">Category</p>
-          <select
-            className="border rounded px-2 py-1 w-48"
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
+          <Select
+            value={selectedCategory || undefined} // undefined when no category
+            onValueChange={(val) => {
+              setSelectedCategory(val ?? "");
               setCurrentPage(1);
             }}
           >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Difficulty Dropdown */}
         <div>
           <p className="font-semibold mb-1">Difficulty</p>
-          <select
-            className="border rounded px-2 py-1 w-48"
-            value={selectedDifficulty}
-            onChange={(e) => {
-              setSelectedDifficulty(e.target.value);
+          <Select
+            value={selectedDifficulty || undefined} // undefined when no difficulty
+            onValueChange={(val) => {
+              setSelectedDifficulty(val ?? "");
               setCurrentPage(1);
             }}
           >
-            <option value="">All Difficulties</option>
-            {difficulties.map((diff) => (
-              <option key={diff} value={diff}>
-                {diff}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Difficulties" />
+            </SelectTrigger>
+            <SelectContent>
+              {difficulties.map((diff) => (
+                <SelectItem key={diff} value={diff}>
+                  {diff}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
         {/* Time Slider */}
         <div className="flex flex-col flex-1">
           <p className="font-semibold mb-2">Time Limit (minutes)</p>
@@ -134,7 +146,6 @@ const QuestionListWithFilters: React.FC<QuestionListWithFiltersProps> = ({
             max={240}
             value={timeRange}
             onValueChange={(val) => setTimeRange([val[0], val[1]])}
-            label={(val) => val}
           />
           <div className="flex justify-between text-sm text-gray-500 mt-1">
             <span>{timeRange[0]} min</span>
