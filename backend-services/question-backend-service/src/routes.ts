@@ -12,6 +12,7 @@ import { Question } from "./db/model/question.js";
 import { z } from "zod";
 import crypto from "crypto";
 import { Types } from "mongoose";
+import type QuestionQuery from "./db/types/questionQuery.js";
 
 if (!process.env.ADMIN_TOKEN) {
   throw new Error("ADMIN_TOKEN environment variable must be set");
@@ -249,11 +250,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       parsed.data;
 
     // Build MongoDB query
-    const query: Record<string, any> = {};
+    const query: QuestionQuery = {};
+
     if (category) query.categoryTitle = category;
     if (difficulty) query.difficulty = difficulty;
     if (minTime || maxTime) {
-      const timeLimitQuery: Record<string, number> = {};
+      const timeLimitQuery: { $gte?: number; $lte?: number } = {};
       if (minTime) timeLimitQuery.$gte = minTime;
       if (maxTime) timeLimitQuery.$lte = maxTime;
       query.timeLimit = timeLimitQuery;
@@ -344,8 +346,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         Question.distinct("difficulty"),
       );
       return reply.send({ difficulties });
-    } catch (err) {
-      return reply.status(500).send({ error: "Failed to fetch difficulties" });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        _req.log?.error({ err }, "Failed to fetch question difficulties");
+        return reply.status(500).send({ error: err.message });
+      }
+      _req.log?.error({ err }, "Failed to fetch question difficulties");
+      return reply.status(500).send({ error: "Internal Server Error" });
     }
   });
 
@@ -385,10 +392,10 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       });
     } catch (err: unknown) {
       if (err instanceof Error) {
-        req.log?.error({ err }, "Failed to fetch details");
+        req.log?.error({ err }, "Failed to fetch question details");
         return reply.status(500).send({ error: err.message });
       }
-      req.log?.error({ err }, "Failed to fetch details");
+      req.log?.error({ err }, "Failed to fetch question details");
       return reply.status(500).send({ error: "Internal Server Error" });
     }
   });
