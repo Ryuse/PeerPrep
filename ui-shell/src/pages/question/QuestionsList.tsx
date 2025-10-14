@@ -5,10 +5,10 @@ import { useNavigate } from "react-router";
 
 const QuestionPage: React.FC = () => {
   const navigate = useNavigate();
-  
+
   return (
     <Layout navHeader={<NavHeader />}>
-      <QuestionList onNavigate={navigate} ></QuestionList>
+      <QuestionList onNavigate={navigate}></QuestionList>
     </Layout>
   );
 };

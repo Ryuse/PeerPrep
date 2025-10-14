@@ -14,19 +14,18 @@ const QuestionDetailsPageShell: React.FC = () => {
   return (
     <Layout navHeader={<NavHeader />}>
       <QuestionDetails
-      questionId={id}
-      onNavigate={navigate}
-      onEdit={() => {
-        //navigate(`/questions/edit/${questionId}`);
-      }}
-      onDelete={(questionId: any) => {
-        // example: navigate back after deletion, or call API here
-        console.log("Delete question", questionId);
-        navigate(-1);
-      }}
-    />
+        questionId={id}
+        onNavigate={navigate}
+        onEdit={() => {
+          //navigate(`/questions/edit/${questionId}`);
+        }}
+        onDelete={(questionId: any) => {
+          // example: navigate back after deletion, or call API here
+          console.log("Delete question", questionId);
+          navigate(-1);
+        }}
+      />
     </Layout>
-
   );
 };
 

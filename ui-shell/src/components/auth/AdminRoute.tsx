@@ -12,12 +12,12 @@ const AdminRoute: React.FC = () => {
     );
   }
 
-  if(!user){
+  if (!user) {
     console.log("Not logged in");
     return <Navigate to="/login" replace />;
   }
 
-  if(!user.isAdmin){
+  if (!user.isAdmin) {
     console.log("Not authorized");
     return <Navigate to="/matching" replace />;
   }
