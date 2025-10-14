@@ -315,10 +315,10 @@ app.get("/questions", async (req, reply) => {
 });
 
 /**
- * GET /questions/difficulties
+ * GET /questions/categories
  * Returns a list of distinct categories from questions.
  */
-app.get("/questions/difficulties", async (_req, reply) => {
+app.get("/questions/categories", async (_req, reply) => {
   try {
     const categories = await withDbLimit(() =>
       Question.distinct("categoryTitle")
