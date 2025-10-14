@@ -12,7 +12,7 @@ import { Question } from "./db/model/question.js";
 import { z } from "zod";
 import crypto from "crypto";
 import { Types } from "mongoose";
-import type QuestionQuery from "./db/types/questionQuery.js";
+import type { QuestionQuery } from "./db/types/questionQuery.js";
 
 if (!process.env.ADMIN_TOKEN) {
   throw new Error("ADMIN_TOKEN environment variable must be set");
