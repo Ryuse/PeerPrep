@@ -19,7 +19,7 @@ const QuestionDetailsPageShell: React.FC = () => {
         onEdit={() => {
           //navigate(`/questions/edit/${questionId}`);
         }}
-        onDelete={(questionId: any) => {
+        onDelete={(questionId: String) => {
           // example: navigate back after deletion, or call API here
           console.log("Delete question", questionId);
           navigate(-1);

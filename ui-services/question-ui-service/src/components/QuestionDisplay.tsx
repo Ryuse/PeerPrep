@@ -32,8 +32,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questionId }) => {
           difficulty: data.difficulty,
           timeLimit: data.timeLimit,
         });
-      } catch (err: any) {
-        setError(err.message || "Failed to load question");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Failed to load question");
+        }
       } finally {
         setLoading(false);
       }

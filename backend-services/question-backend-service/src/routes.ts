@@ -253,9 +253,10 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     if (category) query.categoryTitle = category;
     if (difficulty) query.difficulty = difficulty;
     if (minTime || maxTime) {
-      query.timeLimit = {};
-      if (minTime) query.timeLimit.$gte = minTime;
-      if (maxTime) query.timeLimit.$lte = maxTime;
+      const timeLimitQuery: Record<string, number> = {};
+      if (minTime) timeLimitQuery.$gte = minTime;
+      if (maxTime) timeLimitQuery.$lte = maxTime;
+      query.timeLimit = timeLimitQuery;
     }
 
     // Pagination
@@ -307,7 +308,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         total,
         questions: previews,
       });
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to fetch questions");
+        return reply.status(500).send({ error: err.message });
+      }
       req.log?.error({ err }, "Failed to fetch questions");
       return reply.status(500).send({ error: "Internal Server Error" });
     }
@@ -378,8 +383,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         createdAt: question.createdAt,
         updatedAt: question.updatedAt,
       });
-    } catch (err) {
-      req.log?.error({ err }, "Failed to fetch question details");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to fetch details");
+        return reply.status(500).send({ error: err.message });
+      }
+      req.log?.error({ err }, "Failed to fetch details");
       return reply.status(500).send({ error: "Internal Server Error" });
     }
   });
