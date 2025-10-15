@@ -9,9 +9,7 @@ const QuestionAddPageShell: React.FC = () => {
 
   return (
     <Layout navHeader={<NavHeader />}>
-      <QuestionAdd
-        onNavigate={navigate}
-      />
+      <QuestionAdd onNavigate={navigate} />
     </Layout>
   );
 };

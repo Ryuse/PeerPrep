@@ -12,11 +12,7 @@ const QuestionEditPageShell: React.FC = () => {
 
   return (
     <Layout navHeader={<NavHeader />}>
-      <QuestionEdit
-        questionId={id}
-        onNavigate={navigate}
-
-      />
+      <QuestionEdit questionId={id} onNavigate={navigate} />
     </Layout>
   );
 };

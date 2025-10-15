@@ -13,10 +13,7 @@ const QuestionDetailsPageShell: React.FC = () => {
 
   return (
     <Layout navHeader={<NavHeader />}>
-      <QuestionDetails
-        questionId={id}
-        onNavigate={navigate}
-      />
+      <QuestionDetails questionId={id} onNavigate={navigate} />
     </Layout>
   );
 };
