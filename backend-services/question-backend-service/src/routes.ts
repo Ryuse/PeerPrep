@@ -67,7 +67,8 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         [category: string]: ("Easy" | "Medium" | "Hard")[]; // category as key and difficulty levels as values
       };
     };
-  }>("/exists-categories-difficulties", async (req, reply) => {
+  }>("/exists-categories-difficulties", async (req, reply) => 
+    {
     const { categories } = req.body;
 
     if (!categories || Object.keys(categories).length === 0) {
@@ -356,7 +357,87 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     }
   });
 
-  /**
+
+/**
+ * POST /add-question
+ * Add a new question to the database with minimal required fields from the PeerPrep app itself.
+ * Auto-generates slugs from title.
+ */
+app.post("/add-question", async (req, res) => {
+  const token = getHeader(req, "x-admin-token");
+  if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
+    return res.status(401).send({ error: "Unauthorized" });
+  }
+
+  const Body = z.object({
+    title: z.string().min(1, "Title is required"),
+    categoryTitle: z.string().max(100, "Category title is required"),
+    difficulty: z.enum(["Easy", "Medium", "Hard"]),
+    timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES),
+    content: z.string().min(1, "Content is required"),
+    hints: z.array(z.string()).optional(),
+  });
+
+  const result = Body.safeParse(req.body);
+  if (!result.success) {
+    return res
+      .status(400)
+      .send({ error: "Invalid input", details: result.error.issues });
+  }
+
+  const data = result.data;
+
+  // Check for title uniqueness
+  const existing = await withDbLimit(() =>
+    Question.findOne({ title: data.title }).lean()
+  );
+
+  if (existing) {
+    return res.status(409).send({
+      ok: false,
+      message: "A question with this title already exists",
+      existingId: existing._id.toString(),
+    });
+  }
+
+  // Auto-generate slug from title
+  const slug = data.title
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+
+  const doc = {
+    source: "admin",
+    globalSlug: slug,
+    titleSlug: slug,
+    title: data.title,
+    categoryTitle: data.categoryTitle,
+    difficulty: data.difficulty,
+    timeLimit: data.timeLimit,
+    content: data.content,
+    hints: data.hints && data.hints.length > 0 ? data.hints : null,
+    exampleTestcases: null,
+    codeSnippets: null,
+  };
+
+  try {
+    const savedDoc = await withDbLimit(() => Question.create(doc));
+
+    return res.status(200).send({
+      ok: true,
+      id: savedDoc._id.toString(),
+      message: "Question created successfully",
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      req.log?.error({ err }, "Failed to add question");
+      return res.status(500).send({ error: err.message });
+    }
+    return res.status(500).send({ error: "Internal Server Error" });
+  }
+  });
+
+    /**
    * GET /questions/:id
    * Returns full question details for a given ID.
    */
@@ -399,6 +480,146 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return reply.status(500).send({ error: "Internal Server Error" });
     }
   });
+
+
+  /**
+ * PUT /questions/:id
+ * Updates a question by ID.
+ * Requires admin token.
+ */
+app.put<{
+  Params: { id: string };
+  Body: {
+    title?: string;
+    categoryTitle?: string;
+    difficulty?: Difficulty;
+    timeLimit?: number;
+    content?: string;
+    hints?: string[];
+  };
+}>("/questions/:id", async (req, reply) => {
+  const token = getHeader(req, "x-admin-token");
+  if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
+    return reply.status(401).send({ error: "Unauthorized" });
+  }
+
+  const { id } = req.params;
+
+  // Validate ObjectId
+  if (!Types.ObjectId.isValid(id)) {
+    return reply.status(400).send({ error: "Invalid question ID" });
+  }
+
+  // Validate body using Zod
+  const BodySchema = z.object({
+    title: z.string().min(1).optional(),
+    categoryTitle: z.string().max(100).optional(),
+    difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
+    timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES).optional(),
+    content: z.string().min(1).optional(),
+    hints: z.array(z.string()).optional(),
+  });
+
+  type UpdateData = z.infer<typeof BodySchema> & {
+    titleSlug?: string;
+    globalSlug?: string;
+  };
+
+  const parsed = BodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return reply
+      .status(400)
+      .send({ error: "Invalid input", details: parsed.error.issues });
+  }
+
+  const updateData: UpdateData = parsed.data;
+
+  if (updateData.title) {
+    const slug = updateData.title
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    updateData.titleSlug = slug;
+    updateData.globalSlug = slug;
+  }
+
+  try {
+    const updated = await withDbLimit(() =>
+      Question.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true, runValidators: true, lean: true },
+      ),
+    );
+
+    if (!updated) {
+      return reply.status(404).send({ error: "Question not found" });
+    }
+
+    return reply.send({
+      ok: true,
+      message: "Question updated successfully",
+      questionId: updated._id.toString(),
+      title: updated.title,
+      titleSlug: updated.titleSlug,
+      globalSlug: updated.globalSlug,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      req.log?.error({ err }, "Failed to update question");
+      return reply.status(500).send({ error: err.message });
+    }
+    req.log?.error({ err }, "Failed to update question");
+    return reply.status(500).send({ error: "Internal Server Error" });
+  }
+  });
+
+
+    /**
+   * DELETE /questions/:id
+   * Deletes a question from the database by ID.
+   * Requires admin token.
+   */
+  app.delete<{
+    Params: { id: string };
+  }>("/questions/:id", async (req, reply) => {
+    const token = getHeader(req, "x-admin-token");
+    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      return reply.status(400).send({ error: "Invalid question ID" });
+    }
+
+    try {
+      const deleted = await withDbLimit(() =>
+        Question.findByIdAndDelete(id).lean(),
+      );
+
+      if (!deleted) {
+        return reply.status(404).send({ error: "Question not found" });
+      }
+
+      return reply.send({
+        ok: true,
+        message: "Question deleted successfully",
+        deletedId: id,
+        title: deleted.title,
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to delete question");
+        return reply.status(500).send({ error: err.message });
+      }
+      req.log?.error({ err }, "Failed to delete question");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
 };
 
 export default leetcodeRoutes;
