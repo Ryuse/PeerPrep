@@ -34,16 +34,19 @@ export async function getQuestions(
   const response = await fetch(uriLink, { method: "GET" });
   if (!response.ok) throw new Error("Failed to fetch questions");
 
-  const data = await response.json();
+  const data: { questions?: QuestionPreview[]; total?: number } =
+    await response.json();
 
-  // Map backend keys to frontend expected keys
   return {
     questions: data.questions ?? [],
     totalCount: data.total ?? 0,
   };
 }
 
-export async function updateQuestion(id: string, payload: any) {
+export async function updateQuestion(
+  id: string,
+  payload: Record<string, unknown>,
+): Promise<{ ok: boolean; message?: string }> {
   const adminToken = import.meta.env.VITE_QUESTION_SERVICE_ADMIN_TOKEN;
   const apiUri = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
   const res = await fetch(`${apiUri}/questions/${id}`, {
@@ -69,7 +72,7 @@ export async function getCategories(): Promise<GetCategoriesResponse> {
   const response = await fetch(uriLink, { method: "GET" });
   if (!response.ok) throw new Error("Failed to fetch categories");
 
-  const data = await response.json();
+  const data: { categories?: string[] } = await response.json();
 
   return {
     categories: data.categories ?? [],
@@ -80,7 +83,7 @@ export async function getDifficulties(): Promise<{ difficulties: string[] }> {
   const apiUri = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
   const response = await fetch(`${apiUri}/questions/difficulties`);
   if (!response.ok) throw new Error("Failed to fetch difficulties");
-  const data = await response.json();
+  const data: { difficulties?: string[] } = await response.json();
   return { difficulties: data.difficulties ?? [] };
 }
 
@@ -113,8 +116,8 @@ export async function getQuestionById(id: string): Promise<QuestionDetails> {
   if (response.status === 404) throw new Error("Question not found");
   if (!response.ok) throw new Error("Failed to fetch question details");
 
-  const data = await response.json();
-  return data as QuestionDetails;
+  const data: QuestionDetails = await response.json();
+  return data;
 }
 
 export interface CreateQuestionPayload {
@@ -127,7 +130,7 @@ export interface CreateQuestionPayload {
 }
 
 export interface CreateQuestionResponse {
-  questionId: any;
+  questionId: string;
   ok: boolean;
   id?: string;
   message: string;
@@ -150,16 +153,28 @@ export async function createQuestion(
     body: JSON.stringify(payload),
   });
 
-  const json = await response.json();
+  const json: {
+    ok?: boolean;
+    message?: string;
+    id?: string;
+    questionId?: string;
+    details?: { message: string }[];
+    error?: string;
+  } = await response.json();
 
   if (!response.ok) {
     const errorMsg = json.details
-      ? `Validation errors: ${json.details.map((d: any) => d.message).join(", ")}`
+      ? `Validation errors: ${json.details.map((d) => d.message).join(", ")}`
       : json.error || "Failed to save question";
     throw new Error(errorMsg);
   }
 
-  return json;
+  return {
+    ok: json.ok ?? false,
+    message: json.message ?? "Question created",
+    id: json.id,
+    questionId: json.questionId ?? "",
+  };
 }
 
 export interface DeleteQuestionResponse {
@@ -185,12 +200,23 @@ export async function deleteQuestion(
     },
   });
 
-  const json = await response.json();
+  const json: {
+    ok?: boolean;
+    message?: string;
+    deletedId?: string;
+    title?: string;
+    error?: string;
+  } = await response.json();
 
   if (!response.ok) {
     const errorMsg = json.error || "Failed to delete question";
     throw new Error(errorMsg);
   }
 
-  return json as DeleteQuestionResponse;
+  return {
+    ok: json.ok ?? false,
+    message: json.message ?? "Question deleted successfully",
+    deletedId: json.deletedId ?? id,
+    title: json.title ?? "",
+  };
 }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createQuestion } from "@/api/questionService";
-import QuestionFormUi, { type QuestionForm } from "@/components/QuestionForm";
+import QuestionFormUi from "@/components/QuestionForm";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import type { QuestionForm } from "@/types/QuestionSchemas";
 
 interface QuestionAddPageProps {
   onNavigate: (path: string) => void;

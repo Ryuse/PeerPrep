@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { getQuestionById, updateQuestion } from "@/api/questionService";
-import type { QuestionFormValues } from "@/components/QuestionForm";
 import QuestionFormUi from "@/components/QuestionForm";
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import type { QuestionFormValues } from "@/types/QuestionSchemas";
 
 interface QuestionEditPageProps {
   onNavigate: (path: string) => void;
@@ -77,8 +77,12 @@ const QuestionEditPage: React.FC<QuestionEditPageProps> = ({
       setDialogMessage(result.message || "Question updated successfully");
       setnavigateAfterClose(true);
       setDialogOpen(true);
-    } catch (err: any) {
-      setDialogMessage(err.message || "Failed to update question");
+    } catch (err) {
+      const error =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred while updating the question";
+      setDialogMessage(error);
       setnavigateAfterClose(false);
       setDialogOpen(true);
     }

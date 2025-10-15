@@ -1,27 +1,12 @@
 import React, { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-
-// Zod schema
-export const questionSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  categoryTitle: z.string().max(100, "Category title too long"),
-  difficulty: z.enum(["Easy", "Medium", "Hard"]),
-  timeLimit: z
-    .number()
-    .min(1, "Time limit must be at least 1")
-    .max(240, "Time limit cannot exceed 240"),
-  content: z.string().min(1, "Content cannot be empty"),
-});
-
-export type QuestionForm = z.infer<typeof questionSchema>;
-
-// Explicit initial values type
-export interface QuestionFormValues extends QuestionForm {
-  hints: string[];
-}
+import {
+  questionSchema,
+  type QuestionForm,
+  type QuestionFormValues,
+} from "@/types/QuestionSchemas";
 
 interface QuestionFormUiProps {
   initialValues?: QuestionFormValues;
@@ -54,7 +39,6 @@ const QuestionFormUi: React.FC<QuestionFormUiProps> = ({
     },
   });
 
-  /** 🧩 Hint handlers */
   const addHint = () => setHints([...hints, ""]);
   const removeHint = (index: number) =>
     setHints(hints.filter((_, i) => i !== index));

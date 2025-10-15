@@ -93,9 +93,11 @@ const QuestionDetailsPage: React.FC<QuestionDetailsPageProps> = ({
       } else {
         setDeleteError("Unexpected response from server.");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setDeleteError(err.message || "Failed to connect to server.");
+      const message =
+        err instanceof Error ? err.message : "Failed to connect to server.";
+      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
