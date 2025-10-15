@@ -27,7 +27,6 @@ const QuestionAddPage: React.FC<QuestionAddPageProps> = ({ onNavigate }) => {
       const payload = { ...data, hints };
       const result = await createQuestion(payload);
 
-      // Only navigate if API indicates success
       if (result.ok) {
         setDialogMessage(result.message || "Question created successfully");
         setNavigateAfterClose(`/questions/${result.id}`);
@@ -37,9 +36,10 @@ const QuestionAddPage: React.FC<QuestionAddPageProps> = ({ onNavigate }) => {
       }
 
       setDialogOpen(true);
-    } catch (err: any) {
-      // Handle network / unexpected errors
-      setDialogMessage(err.message || "Failed to create question");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create question";
+      setDialogMessage(message);
       setNavigateAfterClose(null);
       setDialogOpen(true);
     }
