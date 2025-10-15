@@ -43,6 +43,21 @@ export async function getQuestions(
   };
 }
 
+export async function updateQuestion(id: string, payload: any) {
+  const adminToken = import.meta.env.VITE_QUESTION_SERVICE_ADMIN_TOKEN;
+  const apiUri = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
+  const res = await fetch(`${apiUri}/questions/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": adminToken,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update question");
+  return res.json();
+}
+
 export interface GetCategoriesResponse {
   categories: string[];
 }
@@ -73,7 +88,7 @@ export interface QuestionDetails {
   questionId: string;
   title: string;
   categoryTitle: string;
-  difficulty: string;
+  difficulty: "Easy" | "Medium" | "Hard";
   timeLimit: number;
   content: string;
   hints: string[];
@@ -100,4 +115,82 @@ export async function getQuestionById(id: string): Promise<QuestionDetails> {
 
   const data = await response.json();
   return data as QuestionDetails;
+}
+
+export interface CreateQuestionPayload {
+  title: string;
+  categoryTitle: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  timeLimit: number;
+  content: string;
+  hints: string[];
+}
+
+export interface CreateQuestionResponse {
+  questionId: any;
+  ok: boolean;
+  id?: string;
+  message: string;
+}
+
+/**
+ * Create a new question
+ */
+export async function createQuestion(
+  payload: CreateQuestionPayload,
+): Promise<CreateQuestionResponse> {
+  const apiUri = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
+  const adminToken = import.meta.env.VITE_QUESTION_SERVICE_ADMIN_TOKEN;
+  const response = await fetch(`${apiUri}/add-question`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": adminToken,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    const errorMsg = json.details
+      ? `Validation errors: ${json.details.map((d: any) => d.message).join(", ")}`
+      : json.error || "Failed to save question";
+    throw new Error(errorMsg);
+  }
+
+  return json;
+}
+
+export interface DeleteQuestionResponse {
+  ok: boolean;
+  message: string;
+  deletedId: string;
+  title: string;
+}
+
+/**
+ * Delete a question by ID
+ */
+export async function deleteQuestion(
+  id: string,
+): Promise<DeleteQuestionResponse> {
+  const apiUri = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
+  const adminToken = import.meta.env.VITE_QUESTION_SERVICE_ADMIN_TOKEN;
+
+  const response = await fetch(`${apiUri}/questions/${id}`, {
+    method: "DELETE",
+    headers: {
+      "x-admin-token": adminToken,
+    },
+  });
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    const errorMsg = json.error || "Failed to delete question";
+    throw new Error(errorMsg);
+  }
+
+  return json as DeleteQuestionResponse;
 }
