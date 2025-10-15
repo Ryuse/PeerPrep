@@ -1,11 +1,10 @@
 import React from "react";
 import Layout from "@components/layout/BlueBgLayout";
-
-import { useParams, useNavigate } from "react-router-dom";
-import QuestionDetails from "questionUiService/QuestionDetails";
+import { useNavigate, useParams } from "react-router-dom";
+import QuestionEdit from "questionUiService/QuestionEdit";
 import NavHeader from "@/components/common/NavHeader";
 
-const QuestionDetailsPageShell: React.FC = () => {
+const QuestionEditPageShell: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -13,12 +12,13 @@ const QuestionDetailsPageShell: React.FC = () => {
 
   return (
     <Layout navHeader={<NavHeader />}>
-      <QuestionDetails
+      <QuestionEdit
         questionId={id}
         onNavigate={navigate}
+
       />
     </Layout>
   );
 };
 
-export default QuestionDetailsPageShell;
+export default QuestionEditPageShell;
