@@ -37,11 +37,19 @@ export default defineConfig({
     federation({
       name: "peerprep",
       remotes: {
-        matchingUiService: remoteUrl("http://localhost:5174/assets/remoteEntry.js"),
-        questionUiService: remoteUrl("http://localhost:5175/assets/remoteEntry.js"),
-        collabUiService: remoteUrl("http://localhost:5176/assets/remoteEntry.js"),
+        matchingUiService: remoteUrl(
+          "http://localhost:5174/assets/remoteEntry.js",
+        ),
+        questionUiService: remoteUrl(
+          "http://localhost:5175/assets/remoteEntry.js",
+        ),
+        collabUiService: remoteUrl(
+          "http://localhost:5176/assets/remoteEntry.js",
+        ),
         userUiService: remoteUrl("http://localhost:5177/assets/remoteEntry.js"),
-        historyUiService: remoteUrl("http://localhost:5178/assets/remoteEntry.js"),
+        historyUiService: remoteUrl(
+          "http://localhost:5178/assets/remoteEntry.js",
+        ),
       },
       shared: ["react", "react-dom", "react-router-dom"],
     }),

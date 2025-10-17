@@ -6,7 +6,7 @@ import { SuspenseFallback } from "./SuspenseFallback";
 class MfeOfflineError extends Error {
   constructor(remoteName: string) {
     super(`Micro-frontend service is unavailable: ${remoteName}`);
-    this.name = 'MfeOfflineError';
+    this.name = "MfeOfflineError";
   }
 }
 
@@ -34,17 +34,16 @@ export function RemoteWrapper<T extends object>({
   loadingMessage = "Loading...",
   errorMessage = "Service unavailable",
 }: RemoteWrapperProps<T>) {
-
   // Create an enhanced loader that checks the status flag
   const enhancedRemoteLoader = async () => {
     const module = await remote();
-    
+
     // Check if the injected status flag exists and indicates offline status
     if (module.__mfe_status?.isOffline) {
       // Throw an error to trigger the ErrorBoundary
       throw new MfeOfflineError(remoteName);
     }
-    
+
     return module;
   };
 
