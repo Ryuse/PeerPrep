@@ -2,7 +2,6 @@ import React, { Suspense } from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import NavHeader from "@components/common/NavHeader";
 import { useAuth } from "@/data/UserStore";
-import { useNavigate } from "react-router";
 
 // Lazy load the remote MFE
 const RemoteMatchingUi = React.lazy(
@@ -53,14 +52,13 @@ class ErrorBoundary extends React.Component<
 
 const MatchingPage: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   return (
     <Layout navHeader={<NavHeader />}>
       <div className="mb-20 flex-1 flex">
         <ErrorBoundary fallback={<FallbackUi />}>
           <Suspense fallback={<p>Loading Matching UI...</p>}>
-            <RemoteMatchingUi user={user} onNavigate={navigate} />
+            <RemoteMatchingUi user={user} />
           </Suspense>
         </ErrorBoundary>
       </div>
