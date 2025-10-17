@@ -27,52 +27,69 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlValue, setHtmlValue] = useState(value);
 
+  // Initialize Quill once
   useEffect(() => {
-    if (editorRef.current && !quillRef.current) {
-      quillRef.current = new Quill.default(editorRef.current, {
-        theme: "peerprep",
-        modules: {
-          toolbar: [
-            ["bold", "italic", "underline", "strike"],
-            ["link", "image"],
-            ["clean"],
-          ],
-        },
-        placeholder: "Enter the question description...",
-      });
+    if (!editorRef.current || quillRef.current) return;
 
-      quillRef.current.root.style.fontFamily = "monospace";
-      quillRef.current.root.style.overflowY = "auto";
-      quillRef.current.root.style.height = "100%";
+    quillRef.current = new Quill.default(editorRef.current, {
+      theme: "peerprep",
+      modules: {
+        toolbar: [
+          ["bold", "italic", "underline", "strike"],
+          ["link", "image"],
+          ["clean"],
+        ],
+      },
+      placeholder: "Enter the question description...",
+    });
 
-      const delta = quillRef.current.clipboard.convert({ html: value });
-      quillRef.current.setContents(delta, "silent");
+    const quill = quillRef.current;
 
-      quillRef.current.on("text-change", () => {
-        if (!isHtmlMode) {
-          const html = quillRef.current!.root.innerHTML;
-          onChange(html);
-          setHtmlValue(html);
-        }
-      });
+    quill.root.style.fontFamily = "monospace";
+    quill.root.style.height = "100%";
+    quill.root.style.overflowY = "auto";
+
+    // Load initial HTML
+    quill.setContents(quill.clipboard.convert({ html: value }), "silent");
+
+    // Sync Quill changes
+    quill.on("text-change", () => {
+      if (!isHtmlMode) {
+        const html = quill.root.innerHTML;
+        setHtmlValue(html);
+        onChange(html);
+      }
+    });
+  });
+
+  // Sync external value when not typing in Quill
+  useEffect(() => {
+    if (!quillRef.current) return;
+
+    if (!isHtmlMode && value !== quillRef.current.root.innerHTML) {
+      quillRef.current.setContents(
+        quillRef.current.clipboard.convert({ html: value }),
+        "silent",
+      );
     }
-  }, [editorRef, onChange, value, isHtmlMode]);
-
-  useEffect(() => {
     setHtmlValue(value);
-    if (quillRef.current && !isHtmlMode) {
-      const delta = quillRef.current.clipboard.convert({ html: value });
-      quillRef.current.setContents(delta, "silent");
-    }
   }, [value, isHtmlMode]);
 
-  const handleToggleMode = () => {
-    if (!isHtmlMode && quillRef.current) {
+  const toggleMode = () => {
+    if (!quillRef.current) return;
+
+    if (!isHtmlMode) {
+      // Enter HTML mode
       setHtmlValue(quillRef.current.root.innerHTML);
-    } else if (isHtmlMode && quillRef.current) {
-      const delta = quillRef.current.clipboard.convert({ html: htmlValue });
-      quillRef.current.setContents(delta, "silent");
+    } else {
+      // Exit HTML mode: update Quill once
+      quillRef.current.setContents(
+        quillRef.current.clipboard.convert({ html: htmlValue }),
+        "silent",
+      );
+      onChange(htmlValue);
     }
+
     setIsHtmlMode(!isHtmlMode);
   };
 
@@ -81,19 +98,15 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
       <div className="flex gap-2 mb-2">
         <button
           type="button"
-          className={`px-3 py-1 rounded ${
-            !isHtmlMode ? "bg-blue-600 text-white" : "bg-gray-600 text-gray-200"
-          }`}
-          onClick={() => !isHtmlMode || handleToggleMode()}
+          className={`px-3 py-1 rounded ${!isHtmlMode ? "bg-blue-600 text-white" : "bg-gray-600 text-gray-200"}`}
+          onClick={() => !isHtmlMode || toggleMode()}
         >
           Editor
         </button>
         <button
           type="button"
-          className={`px-3 py-1 rounded ${
-            isHtmlMode ? "bg-blue-600 text-white" : "bg-gray-600 text-gray-200"
-          }`}
-          onClick={handleToggleMode}
+          className={`px-3 py-1 rounded ${isHtmlMode ? "bg-blue-600 text-white" : "bg-gray-600 text-gray-200"}`}
+          onClick={toggleMode}
         >
           HTML
         </button>
@@ -113,13 +126,11 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
         {isHtmlMode && (
           <textarea
             value={htmlValue}
-            onChange={(e) => {
-              setHtmlValue(e.target.value);
-              onChange(e.target.value);
-            }}
+            onChange={(e) => setHtmlValue(e.target.value)}
+            onBlur={() => onChange(htmlValue)}
             className="absolute top-0 left-0 w-full p-2 border border-gray-700 bg-gray-800 text-white font-mono resize-none"
             style={{
-              height: `calc(100% + 40px)`,
+              height: `calc(100% + 42px)`, // covers toolbar + editor
               boxSizing: "border-box",
             }}
           />
