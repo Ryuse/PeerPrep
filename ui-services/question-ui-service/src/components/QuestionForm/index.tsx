@@ -123,11 +123,13 @@ const QuestionFormUi: React.FC<QuestionFormUiProps> = ({
               </FormField>
             </div>
 
-            <ContentEditor
-              value={watchedContent}
-              onChange={(val) => setValue("content", val)}
-              error={errors.content?.message}
-            />
+            <div className="mb-8">
+              <ContentEditor
+                value={watchedContent}
+                onChange={(val) => setValue("content", val)}
+                error={errors.content?.message}
+              />
+            </div>
 
             <HintsSection
               hints={hints}
