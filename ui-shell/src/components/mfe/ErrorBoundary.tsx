@@ -28,10 +28,12 @@ export class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="p-6 text-center text-red-600">
-          <h2 className="text-lg font-bold">⚠️ Something went wrong</h2>
-        </div>
+      return (
+        this.props.fallback || (
+          <div className="p-6 text-center text-red-600">
+            <h2 className="text-lg font-bold">⚠️ Something went wrong</h2>
+          </div>
+        )
       );
     }
     return this.props.children;
