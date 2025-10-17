@@ -247,8 +247,16 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         .send({ error: "Invalid query params", details: parsed.error.issues });
     }
 
-    const { title, category, difficulty, minTime, maxTime, size, page, sortBy } =
-    parsed.data;
+    const {
+      title,
+      category,
+      difficulty,
+      minTime,
+      maxTime,
+      size,
+      page,
+      sortBy,
+    } = parsed.data;
 
     // Build MongoDB query
     const query: QuestionQuery = {};
