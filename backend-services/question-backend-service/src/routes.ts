@@ -189,6 +189,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         )
         .nullable()
         .optional(),
+      answer: z.string().nullable().optional(),
     });
     const result = Body.safeParse(req.body);
     if (!result.success) {
@@ -196,7 +197,10 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         .status(400)
         .send({ error: "Invalid input", details: result.error.issues });
     }
-    const doc = result.data;
+    const doc = {
+      ...result.data,
+      answer: result.data.answer ?? null,
+    };
 
     const saved = await withDbLimit(() =>
       Question.updateOne(
@@ -386,6 +390,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES),
       content: z.string().min(1, "Content is required"),
       hints: z.array(z.string()).optional(),
+      answer: z.string().optional(),
     });
 
     const result = Body.safeParse(req.body);
@@ -428,6 +433,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       hints: data.hints && data.hints.length > 0 ? data.hints : null,
       exampleTestcases: null,
       codeSnippets: null,
+      answer: data.answer ?? null,
     };
 
     try {
@@ -480,6 +486,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         codeSnippets: question.codeSnippets ?? [],
         createdAt: question.createdAt,
         updatedAt: question.updatedAt,
+        answer: question.answer ?? "",
       });
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -505,6 +512,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       timeLimit?: number;
       content?: string;
       hints?: string[];
+      answer?: string;
     };
   }>("/questions/:id", async (req, reply) => {
     const token = getHeader(req, "x-admin-token");
@@ -527,6 +535,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES).optional(),
       content: z.string().min(1).optional(),
       hints: z.array(z.string()).optional(),
+      answer: z.string().optional(),
     });
 
     type UpdateData = z.infer<typeof BodySchema> & {

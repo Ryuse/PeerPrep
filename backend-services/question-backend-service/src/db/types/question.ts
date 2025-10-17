@@ -27,7 +27,8 @@ export interface QuestionDoc {
     langSlug: string;
     code: string;
   }> | null;
-
+  answer?: string | null;
+  
   createdAt?: Date;
   updatedAt?: Date;
 }
