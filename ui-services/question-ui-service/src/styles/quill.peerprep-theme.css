@@ -39,3 +39,8 @@
   background-color: #4b5563;
   border-radius: 4px;
 }
+
+.ql-peerprep-editor.ql-blank::before {
+  color: #9c9c9c;
+  opacity: 1;
+}
