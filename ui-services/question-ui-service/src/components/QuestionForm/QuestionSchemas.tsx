@@ -34,6 +34,7 @@ export const questionFormSchema = z.object({
     .min(1, "Content is required")
     .max(10000, "Content is too long"),
   hints: z.array(z.string()),
+  answer: z.string().max(10000, "Answer is too long").optional(),
 });
 
 export type QuestionForm = z.infer<typeof questionFormSchema>;

@@ -43,6 +43,7 @@ const QuestionFormUi: React.FC<QuestionFormUiProps> = ({
       difficulty: initialValues?.difficulty ?? "Easy",
       timeLimit: initialValues?.timeLimit ?? 60,
       content: initialValues?.content ?? "",
+      answer: initialValues?.answer ?? "",
       hints: initialValues?.hints ?? [],
     },
   });
@@ -137,6 +138,14 @@ const QuestionFormUi: React.FC<QuestionFormUiProps> = ({
               remove={remove}
               update={update}
             />
+
+            <FormField label="Answer" error={errors.answer?.message}>
+              <textarea
+                {...register("answer")}
+                placeholder="Enter the correct answer..."
+                className="p-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 focus:outline-none w-full h-32 resize-y"
+              />
+            </FormField>
 
             <div className="flex gap-2">
               <Button
