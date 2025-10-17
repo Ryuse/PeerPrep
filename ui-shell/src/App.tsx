@@ -40,7 +40,7 @@ export default function App() {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, [setUser, setLoading]);
-  
+
   return (
     <Routes>
       {/* Public access */}
