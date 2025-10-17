@@ -2,7 +2,6 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import peerPrepIconWhite from "@assets/icon_white.svg";
 import { cn } from "@/lib/utils";
-import LogoutButton from "userUiService/LogoutButton";
 import { useAuth } from "@/data/UserStore";
 import { RemoteWrapper } from "../mfe/RemoteWrapper";
 
