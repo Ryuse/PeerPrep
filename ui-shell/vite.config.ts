@@ -18,7 +18,7 @@ export default defineConfig({
         userUiService: "http://localhost:5177/assets/remoteEntry.js",
         historyUiService: "http://localhost:5178/assets/remoteEntry.js",
       },
-      shared: ["react", "react-dom"],
+      shared: ["react", "react-dom", "react-router-dom"],
     }),
   ],
   resolve: {
