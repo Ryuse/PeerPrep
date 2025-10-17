@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import FormField from "./FormField";
-import Quill from "quill";
+import * as Quill from "quill";
 import "quill/dist/quill.snow.css";
 import "@/styles/quill.peerprep-theme";
 import "@/styles/quill.peerprep-theme.css";
@@ -10,8 +10,8 @@ interface ContentEditorProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  height?: string; // optional height
-  maxHeight?: string; // optional max height
+  height?: string;
+  maxHeight?: string;
 }
 
 const ContentEditor: React.FC<ContentEditorProps> = ({
@@ -23,12 +23,11 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
   maxHeight = "60vh",
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  const quillRef = useRef<Quill | null>(null);
+  const quillRef = useRef<Quill.default | null>(null);
 
-  // Initialize Quill once
   useEffect(() => {
     if (editorRef.current && !quillRef.current) {
-      quillRef.current = new Quill(editorRef.current, {
+      quillRef.current = new Quill.default(editorRef.current, {
         theme: "peerprep",
         modules: {
           toolbar: [
@@ -40,20 +39,23 @@ const ContentEditor: React.FC<ContentEditorProps> = ({
         placeholder: "Enter the question description...",
       });
 
-      quillRef.current.root.style.fontFamily = "monospace";
-      quillRef.current.root.style.overflowY = "auto"; // enable scrolling
-      quillRef.current.root.style.height = "100%"; // fill container
+      const editor = quillRef.current.root;
+      editor.style.fontFamily = "monospace";
+      editor.style.overflowY = "auto";
+      editor.style.height = "100%";
+
+      // Insert raw HTML tags as text
+      quillRef.current.setText(value);
 
       quillRef.current.on("text-change", () => {
-        onChange(quillRef.current!.root.innerHTML);
+        onChange(quillRef.current!.getText());
       });
     }
   }, [onChange]);
 
-  // Sync external value
   useEffect(() => {
-    if (quillRef.current && quillRef.current.root.innerHTML !== value) {
-      quillRef.current.root.innerHTML = value;
+    if (quillRef.current && quillRef.current.getText() !== value) {
+      quillRef.current.setText(value);
     }
   }, [value]);
 
