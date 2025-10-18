@@ -38,7 +38,7 @@ const QuestionSchema = new Schema<QuestionDoc>(
     exampleTestcases: { type: String, required: false },
     codeSnippets: { type: [CodeSnippetSchema], default: [] },
     hints: { type: [String], default: [] },
-    answer: {type: String, required: false}
+    answer: { type: String, required: false },
   },
   { collection: "questions", timestamps: true },
 );
