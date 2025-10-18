@@ -199,7 +199,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     }
     const doc = {
       ...result.data,
-      answer: result.data.answer ?? null,
     };
 
     const saved = await withDbLimit(() =>
