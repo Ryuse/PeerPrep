@@ -383,9 +383,16 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
    */
   app.get("/questions/categories-with-difficulties", async (_req, reply) => {
     try {
-      // Aggregate distinct category-difficulty pairs
+      // Explicitly type aggregation result
+      interface CategoryDifficultyGroup {
+        _id: {
+          categoryTitle: string;
+          difficulty: string;
+        };
+      }
+
       const results = await withDbLimit(() =>
-        Question.aggregate([
+        Question.aggregate<CategoryDifficultyGroup>([
           {
             $group: {
               _id: {
@@ -397,33 +404,36 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         ]),
       );
 
-      // Build the category-to-difficulty map
       const categoriesMap: Record<string, string[]> = {};
+      const difficultyOrder = ["Easy", "Medium", "Hard"] as const;
 
       for (const entry of results) {
         const { categoryTitle, difficulty } = entry._id;
         if (!categoryTitle || !difficulty) continue;
 
-        if (!categoriesMap[categoryTitle]) {
-          categoriesMap[categoryTitle] = [];
+        const key = String(categoryTitle);
+        const value = String(difficulty);
+
+        if (!categoriesMap[key]) {
+          categoriesMap[key] = [];
         }
 
-        if (!categoriesMap[categoryTitle].includes(difficulty)) {
-          categoriesMap[categoryTitle].push(difficulty);
+        if (!categoriesMap[key].includes(value)) {
+          categoriesMap[key].push(value);
         }
       }
 
       // Sort difficulties in canonical order
-      const difficultyOrder = ["Easy", "Medium", "Hard"];
       for (const key of Object.keys(categoriesMap)) {
         const diffs = categoriesMap[key];
-        if (diffs) {
-          diffs.sort(
-            (a, b) =>
-              ["Easy", "Medium", "Hard"].indexOf(a) -
-              ["Easy", "Medium", "Hard"].indexOf(b),
-          );
+        if(!diffs){
+          continue;
         }
+        diffs.sort(
+          (a, b) =>
+            difficultyOrder.indexOf(a as (typeof difficultyOrder)[number]) -
+            difficultyOrder.indexOf(b as (typeof difficultyOrder)[number]),
+        );
       }
 
       return reply.send(categoriesMap);
