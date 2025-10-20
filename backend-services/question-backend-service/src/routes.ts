@@ -372,6 +372,69 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
+ * GET /questions/categories-with-difficulties
+ * Returns a map of category -> distinct difficulties available (sorted Easy → Medium → Hard)
+ * Example output:
+ * {
+ *   "OOP": ["Easy", "Medium"],
+ *   "Database": ["Medium", "Hard"],
+ *   "Algorithm": ["Easy", "Hard"]
+ * }
+ */
+app.get("/questions/categories-with-difficulties", async (_req, reply) => {
+  try {
+    // Aggregate distinct category-difficulty pairs
+    const results = await withDbLimit(() =>
+      Question.aggregate([
+        {
+          $group: {
+            _id: {
+              categoryTitle: "$categoryTitle",
+              difficulty: "$difficulty",
+            },
+          },
+        },
+      ]),
+    );
+
+    // Build the category-to-difficulty map
+    const categoriesMap: Record<string, string[]> = {};
+
+    for (const entry of results) {
+      const { categoryTitle, difficulty } = entry._id;
+      if (!categoryTitle || !difficulty) continue;
+
+      if (!categoriesMap[categoryTitle]) {
+        categoriesMap[categoryTitle] = [];
+      }
+
+      if (!categoriesMap[categoryTitle].includes(difficulty)) {
+        categoriesMap[categoryTitle].push(difficulty);
+      }
+    }
+
+    // Sort difficulties in canonical order
+    const difficultyOrder = ["Easy", "Medium", "Hard"];
+    for (const key of Object.keys(categoriesMap)) {
+      const diffs = categoriesMap[key];
+      if (diffs) {
+        diffs.sort(
+          (a, b) =>
+            ["Easy", "Medium", "Hard"].indexOf(a) -
+            ["Easy", "Medium", "Hard"].indexOf(b),
+        );
+      }
+    }
+
+    return reply.send(categoriesMap);
+    } catch (err: unknown) {
+      _req.log?.error({ err }, "Failed to fetch categories with difficulties");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+} );
+
+
+  /**
    * POST /add-question
    * Add a new question to the database with minimal required fields from the PeerPrep app itself.
    * Auto-generates slugs from title.
