@@ -426,7 +426,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       // Sort difficulties in canonical order
       for (const key of Object.keys(categoriesMap)) {
         const diffs = categoriesMap[key];
-        if(!diffs){
+        if (!diffs) {
           continue;
         }
         diffs.sort(
