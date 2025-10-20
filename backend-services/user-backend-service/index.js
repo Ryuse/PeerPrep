@@ -43,7 +43,6 @@ app.use(
   }),
 ); // config cors so that front-end can use
 
-
 app.use(cookieParser());
 
 // CSRF handling - disabled for development
@@ -61,7 +60,6 @@ if (enableCsrf) {
     }),
   );
 
-
   app.get("/api/v1/user-service/csrf-token", (req, res) => {
     res.json({ csrfToken: req.csrfToken() });
   });
@@ -72,8 +70,6 @@ if (enableCsrf) {
     res.json({ csrfToken: "dev-mock-token" });
   });
 }
-
-
 
 app.use("/api/v1/user-service/users", userRoutes);
 app.use("/api/v1/user-service/auth", authRoutes);
