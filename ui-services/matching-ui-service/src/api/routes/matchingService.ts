@@ -27,7 +27,7 @@ export type {
 export async function requestMatch(
   preferences: UserPreferences,
 ): Promise<MatchResult> {
-  const url = `${MATCHING_API_BASE}match-requests`;
+  const url = `${MATCHING_API_BASE}/match-requests`;
   const { status, data, error } = await safeFetch<MatchingResponse>(url, {
     method: "PUT",
     body: JSON.stringify(preferences),
@@ -38,7 +38,7 @@ export async function requestMatch(
 export async function cancelMatch(
   userId: string,
 ): Promise<null | { status: string; error: unknown }> {
-  const url = `${MATCHING_API_BASE}match-requests/${userId}`;
+  const url = `${MATCHING_API_BASE}/match-requests/${userId}`;
   const { status, error } = await safeFetch(url, { method: "DELETE" });
   return status >= 200 && status < 300 ? null : { status: "error", error };
 }
@@ -47,7 +47,7 @@ export async function connectMatch(
   userId: string,
   matchId: string,
 ): Promise<MatchAcceptanceResponse> {
-  const url = `${MATCHING_API_BASE}match-requests/${userId}/connect`;
+  const url = `${MATCHING_API_BASE}/match-requests/${userId}/connect`;
   const { status, data, error } = await safeFetch<MatchAcceptanceResponse>(
     url,
     {
@@ -65,7 +65,7 @@ export async function acceptMatch(
   userId: string,
   matchId: string,
 ): Promise<MatchAcceptanceResponse> {
-  const url = `${MATCHING_API_BASE}match-requests/${userId}/accept`;
+  const url = `${MATCHING_API_BASE}/match-requests/${userId}/accept`;
   const { status, data, error } = await safeFetch<MatchAcceptanceResponse>(
     url,
     {
@@ -83,7 +83,7 @@ export async function rejectMatch(
   userId: string,
   matchId: string,
 ): Promise<void> {
-  const url = `${MATCHING_API_BASE}match-requests/${userId}/reject`;
+  const url = `${MATCHING_API_BASE}/match-requests/${userId}/reject`;
   const { status } = await safeFetch(url, {
     method: "PUT",
     body: JSON.stringify({ matchId }),
@@ -96,7 +96,7 @@ export async function rejectMatch(
 export async function requestPreference(
   userId: string,
 ): Promise<PreferenceResult> {
-  const url = `${MATCHING_API_BASE}preferences/${userId}`;
+  const url = `${MATCHING_API_BASE}/preferences/${userId}`;
   const { status, data, error } = await safeFetch<UserPreferences>(url);
   return handlePreferenceResponse(status, data, error);
 }
@@ -105,7 +105,7 @@ export async function createPreference(
   userId: string,
   preferences: UserPreferences,
 ): Promise<PreferenceResult> {
-  const url = `${MATCHING_API_BASE}preferences/${userId}`;
+  const url = `${MATCHING_API_BASE}/preferences/${userId}`;
   const { status, data, error } = await safeFetch<UserPreferences>(url, {
     method: "PUT",
     body: JSON.stringify(preferences),
@@ -116,7 +116,7 @@ export async function createPreference(
 // ---------- Config Route ----------
 
 export async function getTimeoutConfig(): Promise<TimeoutConfig> {
-  const url = `${MATCHING_API_BASE}config`;
+  const url = `${MATCHING_API_BASE}/config`;
   const { data, error } = await safeFetch<TimeoutConfig>(url);
 
   if (!data) {
