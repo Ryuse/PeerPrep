@@ -2,11 +2,11 @@ name: Deploy history-ui-service to S3
 
 on:
   push:
-    branches: 
+    branches:
       - master
     paths:
-      - 'ui-services/history-ui-service/**'
-      - '.github/workflows/deploy-history-ui.yml'
+      - "ui-services/history-ui-service/**"
+      - ".github/workflows/deploy-history-ui.yml"
   workflow_dispatch:
 
 jobs:

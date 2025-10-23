@@ -2,11 +2,11 @@ name: Deploy collab-ui-service to S3
 
 on:
   push:
-    branches: 
+    branches:
       - master
     paths:
-      - 'ui-services/collab-ui-service/**'
-      - '.github/workflows/deploy-collab-ui.yml'
+      - "ui-services/collab-ui-service/**"
+      - ".github/workflows/deploy-collab-ui.yml"
   workflow_dispatch:
 
 jobs:

@@ -1,6 +1,6 @@
 import SessionService from "../services/session.service.js";
 
-const QUESTION_SERVICE_BASE_URL = process.env.QUESTION_SERVICE_URL
+const QUESTION_SERVICE_BASE_URL = process.env.QUESTION_SERVICE_URL;
 
 const VALID_DIFFICULTIES = new Set(["Easy", "Medium", "Hard"]);
 

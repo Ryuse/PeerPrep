@@ -2,11 +2,11 @@ name: Deploy question-ui-service to S3
 
 on:
   push:
-    branches: 
+    branches:
       - master
     paths:
-      - 'ui-services/question-ui-service/**'
-      - '.github/workflows/deploy-question-ui.yml'
+      - "ui-services/question-ui-service/**"
+      - ".github/workflows/deploy-question-ui.yml"
   workflow_dispatch:
 
 jobs:

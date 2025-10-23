@@ -2,11 +2,11 @@ name: Deploy ui-shell to S3
 
 on:
   push:
-    branches: 
+    branches:
       - master
     paths:
-      - 'ui-shell/**'
-      - '.github/workflows/deploy-ui-shell.yml'
+      - "ui-shell/**"
+      - ".github/workflows/deploy-ui-shell.yml"
   workflow_dispatch:
 
 jobs:
