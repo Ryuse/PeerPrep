@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 router.get("/health", healthCheck); // called by load balancers to see if service is ok.
-router.get("/health/ready", readinessCheck); // readiness check to see if dependencies are up. 
+router.get("/health/ready", readinessCheck); // readiness check to see if dependencies are up.
 router.post("/start", startSession); // called by Matching BE -> creates new session
 router.post("/connect/:userId", connectSession); // called by FE when user connects/reconnects
 router.post("/disconnect/:userId", disconnectSession); // push to Question History

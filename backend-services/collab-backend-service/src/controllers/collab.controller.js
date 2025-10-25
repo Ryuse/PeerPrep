@@ -133,7 +133,6 @@ export const readinessCheck = async (_req, res) => {
   res.status(httpStatus).json(result);
 };
 
-
 export const startSession = async (req, res) => {
   try {
     const {
