@@ -10,7 +10,10 @@ export const initSocket = (server) => {
   const io = new Server(server, {
     path: "/api/v1/chat-service/socket.io",
     cors: {
-      origin: ["http://localhost:5173", "https://d1h013fkmpx3nu.cloudfront.net"],
+      origin: [
+        "http://localhost:5173",
+        "https://d1h013fkmpx3nu.cloudfront.net",
+      ],
       methods: ["GET", "POST"],
     },
   });

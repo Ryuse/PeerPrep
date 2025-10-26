@@ -13,9 +13,9 @@ app.use(express.json());
 
 const whitelist = (process.env.CORS_WHITELIST || "http://localhost:5173")
   .split(",")
-  .map(origin => origin.trim())
-  .filter(origin => origin.length > 0);
-console.log(whitelist)
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
+console.log(whitelist);
 app.use(
   cors({
     origin: function (origin, callback) {
