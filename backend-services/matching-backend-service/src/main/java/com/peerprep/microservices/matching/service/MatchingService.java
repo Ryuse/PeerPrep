@@ -52,16 +52,9 @@ public class MatchingService {
   // ---------- [Matching] ----------
   /**
    * Attempt to find a match for a user asynchronously within a given time frame.
-   *
-   * <<<<<<< Updated upstream
-   * If a match exists in the pool, the future completes immediately.
+   * = * If a match exists in the pool, the future completes immediately.
    * Otherwise, the user is added to the pool and wait until a compatible match is
    * found or timeout expires.
-   * =======
-   * If a match exists in the pool, the future completes immediately. Otherwise,
-   * the user is added to the pool and wait
-   * until a compatible match is found or timeout expires.
-   * >>>>>>> Stashed changes
    *
    * @param request   The {@link UserPreferenceRequest} of the user requesting a
    *                  match.
