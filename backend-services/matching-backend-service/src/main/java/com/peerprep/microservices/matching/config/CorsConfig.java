@@ -27,7 +27,7 @@ public class CorsConfig {
             .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true)
-            .maxAge(3600); // Optional: cache preflight requests
+            .maxAge(3600);
       }
     };
   }
