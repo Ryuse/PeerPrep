@@ -26,7 +26,8 @@ import com.peerprep.microservices.matching.event.MatchNotificationListener;
  * Spring configuration for Redis integration.
  *
  * Provides beans for caching, Redis templates, and message listener containers
- * to support both cache-based and pub/sub use cases in the matching service.
+ * to support both cache-based and pub/sub
+ * use cases in the matching service.
  */
 @Configuration
 public class RedisConfig {
@@ -93,8 +94,7 @@ public class RedisConfig {
   @Bean
   public RedisMessageListenerContainer redisContainer(
       RedisConnectionFactory connectionFactory,
-      MatchNotificationListener messageListener,
-      RedisChannels channels) {
+      MatchNotificationListener messageListener) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
 
