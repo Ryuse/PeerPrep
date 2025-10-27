@@ -1,7 +1,8 @@
 package com.peerprep.microservices.matching.config;
 
 /**
- * Contains the Redis channel names used for pub/sub communication in the matching service.
+ * Contains the Redis channel names used for pub/sub communication in the
+ * matching service.
  */
 public class RedisChannels {
   public static final String MATCH_CHANNEL = "match-notifications";

@@ -28,13 +28,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * <<<<<<< HEAD
  * Service for handling user matching logic, including match requests,
  * cancellations, and processing match
- * =======
- * Service for handling user matching logic, including match requests,
- * cancellations, and processing match
- * >>>>>>> f1c93529873cfe85006da1f09d946914a254073d
  * notifications.
  */
 @Service
