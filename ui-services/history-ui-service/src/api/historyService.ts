@@ -1,12 +1,13 @@
 import type { HistoryEntry } from "@/types/HistoryEntry";
 
+const isDev = import.meta.env.VITE_MODE === "dev"
+ 
 const HISTORY_BASE_URL =
-  import.meta.env.VITE_MODE === "dev"
-    ? "http://localhost:5296/api/v1/history-service"
-    : "/api/v1/history-service";
+   (isDev
+    ? "http://localhost:5278"
+    : "");
 
-const HISTORY_SERVICE_BASE_URL =
-  import.meta.env.VITE_HISTORY_SERVICE_URL ?? HISTORY_BASE_URL;
+const HISTORY_SERVICE_BASE_URL = HISTORY_BASE_URL + "/api/v1/history-service";
 
 interface HistoryApiResponse {
   success?: boolean;
