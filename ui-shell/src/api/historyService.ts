@@ -2,7 +2,9 @@ import type { HistorySnapshot } from "@/types/history";
 
 const isDev = import.meta.env.VITE_MODE === "dev";
 
-const HISTORY_BASE_URL = isDev ? "http://localhost:5278" : "";
+const HISTORY_BASE_URL = isDev
+  ? "http://localhost:5278"
+  : "https://d2zqikej7k9p0j.cloudfront.net";
 
 const HISTORY_SERVICE_BASE_URL = HISTORY_BASE_URL + "/api/v1/history-service";
 
