@@ -16,7 +16,6 @@ export const healthCheck = async (req, res) => {
   }
 };
 
-
 export const createHistorySnapshot = async (req, res) => {
   try {
     console.log("[history.controller] POST /history payload", req.body);
