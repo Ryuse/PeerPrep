@@ -291,7 +291,7 @@ public class AcceptanceService {
     CompletableFuture.runAsync(() -> {
       try {
         int previous = initialCount;
-        while (System.currentTimeMillis() < end && !matchedWaitingFutures.isEmpty()) {
+        while (System.currentTimeMillis() < end) {
           int remaining = matchedWaitingFutures.size();
           long elapsed = (System.currentTimeMillis() - start) / 1000;
 

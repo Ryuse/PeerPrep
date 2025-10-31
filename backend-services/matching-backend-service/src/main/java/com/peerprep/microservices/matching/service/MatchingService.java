@@ -304,7 +304,7 @@ public class MatchingService {
     long endTime = startTime + timeout.toMillis();
 
     try {
-      while (System.currentTimeMillis() < endTime && !waitingFutures.isEmpty()) {
+      while (System.currentTimeMillis() < endTime) {
         int remaining = waitingFutures.size();
         long elapsed = (System.currentTimeMillis() - startTime) / 1000;
 
