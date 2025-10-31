@@ -135,11 +135,9 @@ public class MatchingServiceController {
 
     // Check if service is shutting down
     if (shutdownService.isShuttingDown()) {
-      return CompletableFuture.completedFuture(
-          ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-              .body(Map.of(
-                  "error", "Service is shutting down",
-                  "message", "Please retry your request")));
+      ResponseEntity<?> response = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body("Service is shutting down");
+      return CompletableFuture.completedFuture(response);
     }
 
     long timeoutMs = timeoutConfig.getMatchRequest();
