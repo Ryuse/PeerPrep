@@ -1,5 +1,6 @@
 package com.peerprep.microservices.matching.service;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -28,7 +29,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for handling user matching logic, including match requests, cancellations, and processing match
+ * Service for handling user matching logic, including match requests,
+ * cancellations, and processing match
  * notifications.
  */
 @Service
@@ -52,12 +54,15 @@ public class MatchingService {
   /**
    * Attempt to find a match for a user asynchronously within a given time frame.
    *
-   * If a match exists in the pool, the future completes immediately. Otherwise, the user is added to the pool and wait
+   * If a match exists in the pool, the future completes immediately. Otherwise,
+   * the user is added to the pool and wait
    * until a compatible match is found or timeout expires.
    *
-   * @param request The {@link UserPreferenceRequest} of the user requesting a match.
+   * @param request   The {@link UserPreferenceRequest} of the user requesting a
+   *                  match.
    * @param timeoutMs Maximum time in milliseconds to wait for a match.
-   * @return {@link CompletableFuture} that completes with a {@link MatchingOutcome}
+   * @return {@link CompletableFuture} that completes with a
+   *         {@link MatchingOutcome}
    */
   public CompletableFuture<MatchingOutcome> requestMatchAsync(UserPreferenceRequest request, long timeoutMs) {
     UserPreference pref = userPreferenceService.mapToUserPreference(request);
@@ -86,7 +91,7 @@ public class MatchingService {
     if (oldDeleted) {
       redisTemplate.convertAndSend(RedisChannels.CANCEL_CHANNEL, oldRequestId);
       log.info("Previous match request for user {} was removed. Notified other instances to cancel the old request",
-        userId);
+          userId);
     }
 
     UserPreference matchedPref = matchRedisResult.getMatched();
@@ -97,33 +102,33 @@ public class MatchingService {
     // Match found immediately
     if (matchedPref != null) {
       log.info("Match found immediately for user {} with requestId {}. matched with user {}",
-        userId, requestId, matchedPref.getUserId());
+          userId, requestId, matchedPref.getUserId());
 
       // Save match details to match acceptance
       String matchId = UUID.randomUUID().toString();
       MatchDetails matchDetails = new MatchDetails(
-        matchId,
-        pref.getUserId(),
-        matchedPref.getUserId(),
-        pref.getQuestionPreference());
+          matchId,
+          pref.getUserId(),
+          matchedPref.getUserId(),
+          pref.getQuestionPreference());
 
       MatchAcceptanceStatus acceptanceStatus = new MatchAcceptanceStatus(
-        matchDetails,
-        MatchAcceptanceStatus.AcceptanceStatus.PENDING,
-        MatchAcceptanceStatus.AcceptanceStatus.PENDING);
+          matchDetails,
+          MatchAcceptanceStatus.AcceptanceStatus.PENDING,
+          MatchAcceptanceStatus.AcceptanceStatus.PENDING);
 
       redisAcceptanceService.saveMatchAcceptanceDetails(
-        acceptanceStatus,
-        userId,
-        matchedPref.getUserId());
+          acceptanceStatus,
+          userId,
+          matchedPref.getUserId());
 
       // Publish matched notification to all instances
       MatchingNotification matchResult = new MatchingNotification(
-        requestId,
-        matchedRequestId,
-        pref,
-        matchedPref,
-        matchId);
+          requestId,
+          matchedRequestId,
+          pref,
+          matchedPref,
+          matchId);
       publishMatchNotification(matchResult);
 
       return future;
@@ -184,17 +189,18 @@ public class MatchingService {
       String message = objectMapper.writeValueAsString(matchResult);
       redisTemplate.convertAndSend(RedisChannels.MATCH_CHANNEL, message);
       log.info("Published match result for users {} and {}",
-        matchResult.getUser1Preference().getUserId(),
-        matchResult.getUser2Preference().getUserId());
+          matchResult.getUser1Preference().getUserId(),
+          matchResult.getUser2Preference().getUserId());
     } catch (JsonProcessingException e) {
       log.error("Failed to publish match result", e);
     }
   }
 
   /**
-   * Publish a cancel notification event to all instances to cancel a pending match request.
+   * Publish a cancel notification event to all instances to cancel a pending
+   * match request.
    * 
-   * @param userId The Id of the user canceling their match request.
+   * @param userId    The Id of the user canceling their match request.
    * @param requestId The Id of the match request being canceled.
    */
   private void publishCancelNotification(String userId, String requestId) {
@@ -203,7 +209,8 @@ public class MatchingService {
   }
 
   /**
-   * Handles a matched notification event from Redis Pub/Sub. Completes the corresponding futures for both users if they
+   * Handles a matched notification event from Redis Pub/Sub. Completes the
+   * corresponding futures for both users if they
    * exist.
    * 
    * @param matchResult The matched notification details.
@@ -229,15 +236,17 @@ public class MatchingService {
   }
 
   /**
-   * Completes a user's match future with MATCHED status if the future exists and is not already completed.
+   * Completes a user's match future with MATCHED status if the future exists and
+   * is not already completed.
    * 
-   * @param userPreference The preference of the user whose future is to be completed.
-   * @param future The CompletableFuture to complete.
+   * @param userPreference    The preference of the user whose future is to be
+   *                          completed.
+   * @param future            The CompletableFuture to complete.
    * @param matchedPreference The preference of the matched user.
-   * @param matchId The unique ID of the match used for the outcome.
+   * @param matchId           The unique ID of the match used for the outcome.
    */
   private void completeUserFuture(UserPreference userPreference, UserPreference matchedPreference,
-    CompletableFuture<MatchingOutcome> future, String matchId) {
+      CompletableFuture<MatchingOutcome> future, String matchId) {
     String userId = userPreference.getUserId();
 
     if (future == null) {
@@ -257,7 +266,8 @@ public class MatchingService {
   }
 
   /**
-   * Handles a cancel notification event from Redis Pub/Sub. Completes the corresponding future with CANCELLED status if
+   * Handles a cancel notification event from Redis Pub/Sub. Completes the
+   * corresponding future with CANCELLED status if
    * it exists.
    * 
    * @param oldRequestId The Id of the match request being canceled.
@@ -275,6 +285,45 @@ public class MatchingService {
     }
 
     log.info("Cancelled old match request with requestId {}", oldRequestId);
+  }
+
+  // ---------- [Shutting Down Handlers] ----------
+
+  /**
+   * Wait for all ongoing match requests to complete naturally through timeout
+   * mechanism.
+   * Monitors the waiting futures and logs progress.
+   * 
+   * @param timeout The maximum time to wait for completion.
+   */
+  public void awaitTermination(Duration timeout) {
+    log.info("Waiting up to {} seconds for {} match requests to complete",
+        timeout.getSeconds(), waitingFutures.size());
+
+    long startTime = System.currentTimeMillis();
+    long endTime = startTime + timeout.toMillis();
+
+    try {
+      while (System.currentTimeMillis() < endTime && !waitingFutures.isEmpty()) {
+        int remaining = waitingFutures.size();
+        long elapsed = (System.currentTimeMillis() - startTime) / 1000;
+
+        log.info("Shutdown progress: {} requests remaining after {}s", remaining, elapsed);
+        Thread.sleep(5000); // Log every 5 seconds
+      }
+
+      if (waitingFutures.isEmpty()) {
+        log.info("All match requests completed naturally");
+      } else {
+        log.warn("Shutdown timeout reached with {} requests still pending - forcing exit",
+            waitingFutures.size());
+      }
+
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      log.warn("Termination wait interrupted with {} requests remaining",
+          waitingFutures.size(), e);
+    }
   }
 
 }
