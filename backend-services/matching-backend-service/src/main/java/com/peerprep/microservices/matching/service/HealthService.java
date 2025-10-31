@@ -24,14 +24,23 @@ public class HealthService {
 
   @Value("${collab.service.base-url}")
   private String collabServiceBaseUrl;
+  private final GracefulShutdownService shutdownService;
 
   /**
    * Simple liveness check — confirms that the service itself is running.
    * 
-   * @return a {@link ResponseEntity} containing a {@link Map} with information of status, service, timestamp and uptime
+   * @return a {@link ResponseEntity} containing a {@link Map} with information of
+   *         status, service, timestamp and uptime
    */
   public ResponseEntity<Map<String, Object>> getLiveness() {
     Map<String, Object> health = new HashMap<>();
+
+    if (shutdownService.isShuttingDown()) {
+      health.put("status", "DOWN");
+      health.put("message", "Instance is shutting down");
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(health);
+    }
+
     health.put("status", "UP");
     health.put("service", "matching-service");
     health.put("timestamp", System.currentTimeMillis());
@@ -40,23 +49,33 @@ public class HealthService {
   }
 
   /**
-   * Readiness check. Verifies that dependent services (e.g. Collaboration Service) are reachable and responding.
+   * Readiness check. Verifies that dependent services (e.g. Collaboration
+   * Service) are reachable and responding.
    * 
-   * @return a {@link ResponseEntity} containing a {@link Map} with the current service, collab service message, status
-   *         of collab and {@link HttpStatus#OK} if the dependent services are healthy, or
-   *         {@link HttpStatus#SERVICE_UNAVAILABLE} if any critical dependency is down.
+   * @return a {@link ResponseEntity} containing a {@link Map} with the current
+   *         service, collab service message, status
+   *         of collab and {@link HttpStatus#OK} if the dependent services are
+   *         healthy, or
+   *         {@link HttpStatus#SERVICE_UNAVAILABLE} if any critical dependency is
+   *         down.
    */
   public ResponseEntity<Map<String, Object>> getReadiness() {
     Map<String, Object> result = new HashMap<>();
     result.put("service", "matching-service");
+
+    if (shutdownService.isShuttingDown()) {
+      result.put("status", "DOWN");
+      result.put("message", "Not ready - shutting down");
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(result);
+    }
 
     boolean collabUp = false;
     String collabMessage;
 
     try {
       String base = collabServiceBaseUrl.endsWith("/")
-        ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
-        : collabServiceBaseUrl;
+          ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
+          : collabServiceBaseUrl;
 
       String collabHealthUrl = base + "/health";
       ResponseEntity<Map> collabResponse = restTemplate.getForEntity(collabHealthUrl, Map.class);
