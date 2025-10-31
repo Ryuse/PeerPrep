@@ -273,8 +273,8 @@ public class MatchingService {
    * @param oldRequestId The Id of the match request being canceled.
    */
   public void handleCancelNotification(String oldRequestId) {
-
-    CompletableFuture<MatchingOutcome> oldFuture = waitingFutures.get(oldRequestId);
+    log.info("Handling Cancel Notification for {}", oldRequestId);
+    CompletableFuture<MatchingOutcome> oldFuture = waitingFutures.remove(oldRequestId);
     if (oldFuture == null) {
       log.info("Cancel-notification ignored: no pending request with requestId {}", oldRequestId);
       return;
