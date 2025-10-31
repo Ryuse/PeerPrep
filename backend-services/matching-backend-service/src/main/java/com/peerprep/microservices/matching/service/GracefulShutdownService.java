@@ -3,14 +3,15 @@ package com.peerprep.microservices.matching.service;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class GracefulShutdownService {
 
   private final MatchingService matchingService;
@@ -18,34 +19,45 @@ public class GracefulShutdownService {
 
   private volatile boolean shuttingDown = false;
 
-  @PreDestroy
-  public void shutdown() {
-    if (shuttingDown)
+  /**
+   * Triggered on ContextClosedEvent to orchestrate graceful shutdown.
+   */
+  public void performGracefulShutdown() {
+    if (shuttingDown) {
+      log.warn("Shutdown already in progress.. Skipping duplicate invocation.");
       return;
+    }
 
     shuttingDown = true;
-    log.info("Starting graceful shutdown. No new requests will be accepted.");
+    log.info("Instance marked as shutting down.. Rejecting new match requests.");
+
+    Thread shutdownThread = new Thread(() -> {
+      try {
+        Duration timeout = Duration.ofSeconds(120);
+        log.info("Waiting up to {} seconds for ongoing requests to complete...", timeout.getSeconds());
+
+        CompletableFuture<Void> matchFuture = CompletableFuture
+            .runAsync(() -> matchingService.awaitTermination(timeout));
+        CompletableFuture<Void> acceptanceFuture = CompletableFuture
+            .runAsync(() -> acceptanceService.awaitTermination(timeout));
+
+        CompletableFuture.allOf(matchFuture, acceptanceFuture)
+            .orTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+            .join();
+
+        log.info("Graceful shutdown complete. All operations finished.");
+      } catch (Exception e) {
+        log.error("Error during graceful shutdown process", e);
+      }
+    }, "GracefulShutdownCoordinator");
+
+    shutdownThread.start();
 
     try {
-      // Define the overall timeout window (matches EC2 termination grace period)
-      Duration totalTimeout = Duration.ofSeconds(120);
-
-      // Start monitoring both services concurrently
-      CompletableFuture<Void> matchingFuture = CompletableFuture.runAsync(
-          () -> matchingService.awaitTermination(totalTimeout));
-
-      CompletableFuture<Void> acceptanceFuture = CompletableFuture.runAsync(
-          () -> acceptanceService.awaitTermination(totalTimeout));
-
-      // Wait for both services to complete or timeout
-      CompletableFuture.allOf(matchingFuture, acceptanceFuture)
-          .orTimeout(totalTimeout.toSeconds(), TimeUnit.SECONDS)
-          .join();
-
-      log.info("Graceful shutdown completed successfully. All pending operations resolved.");
-
-    } catch (Exception e) {
-      log.error(" Error during graceful shutdown", e);
+      shutdownThread.join();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      log.warn("Shutdown thread interrupted", e);
     }
   }
 
