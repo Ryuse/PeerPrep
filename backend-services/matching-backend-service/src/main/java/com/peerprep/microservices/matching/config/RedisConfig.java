@@ -89,7 +89,6 @@ public class RedisConfig {
    *
    * @param connectionFactory the Redis connection factory
    * @param messageListener   the listener to handle incoming Redis messages
-   * @param channels          the channels to listen on
    * @return the configured message listener container
    */
   @Bean
