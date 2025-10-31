@@ -15,8 +15,7 @@ import com.peerprep.microservices.matching.service.MatchingService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Main application class for the Matching Service. This service handles user
- * matching based on preferences and manages
+ * Main application class for the Matching Service. This service handles user matching based on preferences and manages
  * match requests.
  */
 @SpringBootApplication

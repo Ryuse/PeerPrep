@@ -37,13 +37,13 @@ public class GracefulShutdownService {
         log.info("Waiting up to {} seconds for ongoing requests to complete...", timeout.getSeconds());
 
         CompletableFuture<Void> matchFuture = CompletableFuture
-            .runAsync(() -> matchingService.awaitTermination(timeout));
+          .runAsync(() -> matchingService.awaitTermination(timeout));
         CompletableFuture<Void> acceptanceFuture = CompletableFuture
-            .runAsync(() -> acceptanceService.awaitTermination(timeout));
+          .runAsync(() -> acceptanceService.awaitTermination(timeout));
 
         CompletableFuture.allOf(matchFuture, acceptanceFuture)
-            .orTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
-            .join();
+          .orTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+          .join();
 
         log.info("Graceful shutdown complete. All operations finished.");
       } catch (Exception e) {
