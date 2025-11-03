@@ -169,11 +169,9 @@ public class MatchingServiceController {
    * 
    * @param userId the ID of the user connecting to the match request
    * @param matchAcceptanceRequest the request body containing the match ID
-   * @return a {@link CompletableFuture} containing a {@link ResponseEntity} with a {@link MatchAcceptanceResponse}:
-   *         - HTTP 200 (OK) if the match connection was successful.
-   *         - HTTP 409 (CONFLICT) if the match was rejected.
-   *         - HTTP 410 (GONE) if the match has expired.
-   *         - HTTP 202 (ACCEPTED) if the match connection is still pending.
+   * @return a {@link CompletableFuture} containing a {@link ResponseEntity} with a {@link MatchAcceptanceResponse}: -
+   *         HTTP 200 (OK) if the match connection was successful. - HTTP 409 (CONFLICT) if the match was rejected. -
+   *         HTTP 410 (GONE) if the match has expired. - HTTP 202 (ACCEPTED) if the match connection is still pending.
    */
   @PostMapping("/match-requests/{userId}/connect")
   public CompletableFuture<ResponseEntity<MatchAcceptanceResponse>> connectMatch(
@@ -184,12 +182,12 @@ public class MatchingServiceController {
       .connectMatch(userId, matchAcceptanceRequest.matchId())
       .thenApply(response -> {
         MatchAcceptanceResponse body = new MatchAcceptanceResponse(response);
-          return switch (response) {
-              case SUCCESS -> ResponseEntity.ok(body);
-              case REJECTED -> ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-              case EXPIRED -> ResponseEntity.status(HttpStatus.GONE).body(body);
-              default -> ResponseEntity.status(HttpStatus.ACCEPTED).body(body);
-          };
+        return switch (response) {
+          case SUCCESS -> ResponseEntity.ok(body);
+          case REJECTED -> ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+          case EXPIRED -> ResponseEntity.status(HttpStatus.GONE).body(body);
+          default -> ResponseEntity.status(HttpStatus.ACCEPTED).body(body);
+        };
       });
   }
 
