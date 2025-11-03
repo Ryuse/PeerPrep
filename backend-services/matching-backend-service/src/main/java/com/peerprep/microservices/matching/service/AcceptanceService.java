@@ -45,7 +45,7 @@ public class AcceptanceService {
   /**
    * Connects a user to a match acceptance.
    *
-   * @param userId the ID of the user to connect
+   * @param userId  the ID of the user to connect
    * @param matchId the ID of the match to connect to
    * @return the match acceptance outcome
    */
@@ -56,18 +56,33 @@ public class AcceptanceService {
     CompletableFuture<MatchAcceptanceOutcome.Status> connectFuture = new CompletableFuture<>();
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-      matchId,
-      userId,
-      AcceptanceStatus.CONNECTED,
-      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+        matchId,
+        userId,
+        AcceptanceStatus.CONNECTED,
+        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
     }
 
-    MatchAcceptanceOutcome.Status finalStatus = evaluateMatchOutcome(updated);
+    // Handle expiration
+    String user1Id = updated.getMatchDetails().getUser1Id();
+    String user2Id = updated.getMatchDetails().getUser2Id();
+    AcceptanceStatus user1Status = updated.getUser1Accepted();
+    AcceptanceStatus user2Status = updated.getUser2Accepted();
+
+    boolean userExpired = (user1Id.equals(userId) && user1Status == AcceptanceStatus.EXPIRED)
+        || (user2Id.equals(userId) && user2Status == AcceptanceStatus.EXPIRED);
+
+    if (userExpired) {
+      log.warn("User {} failed to connect as match {} is expired. Returning EXPIRED status.", userId, matchId);
+      connectFuture.complete(MatchAcceptanceOutcome.Status.EXPIRED);
+      return connectFuture;
+    }
 
     // Complete future if outcome already determined.
+    MatchAcceptanceOutcome.Status finalStatus = evaluateMatchOutcome(updated);
+
     if (finalStatus != MatchAcceptanceOutcome.Status.PENDING) {
       log.info("Match {} was rejected. Completing future.", matchId);
       connectFuture.complete(finalStatus);
@@ -76,25 +91,82 @@ public class AcceptanceService {
     matchedWaitingFutures.put(userId, connectFuture);
     log.info("Connected User {} to match {}", userId, matchId);
 
-    // Timeout handling
-    long timeoutMs = timeoutConfig.getMatchAcceptance();
-    CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute(() -> {
-      if (!connectFuture.isDone()) {
-        log.warn("User {}'s connection to match {} timed out after {} ms. Rejecting..", userId, matchId, timeoutMs);
-
-        rejectMatch(userId, matchId);
-
-        log.info("User {}'s connect future for match {} marked as REJECTED due to timeout", userId, matchId);
-      }
-    });
+    handleExpiryRecheck(userId, matchId, connectFuture);
+    handleMatchConnectTimeout(userId, matchId, connectFuture);
 
     return connectFuture;
   }
 
   /**
+   * Schedules a one-time expiry verification check at (timestamp + 10s).
+   * If the match has not been connected by the other user by that time, marks it
+   * as REJECTED.
+   * 
+   * @param userId        the ID of the user
+   * @param matchId       the ID of the match
+   * @param connectFuture the future to complete if the match is rejected.
+   */
+  private void handleExpiryRecheck(String userId, String matchId,
+      CompletableFuture<MatchAcceptanceOutcome.Status> connectFuture) {
+
+    Long matchTimestamp = redisAcceptanceService.getTimestampFromMatchId(matchId);
+    long nowSec = System.currentTimeMillis() / 1000L; // Redis time is in UNIX seconds.
+    long delaySec = (matchTimestamp + 10) - nowSec;
+    log.info("Scheduling expiry check for match {} in {} seconds", matchId, delaySec);
+
+    CompletableFuture.delayedExecutor(delaySec, TimeUnit.SECONDS).execute(() -> {
+      if (connectFuture.isDone()) {
+        return;
+      }
+
+      log.info("Running expiry check for match {}", matchId);
+
+      MatchAcceptanceStatus current = redisAcceptanceService.getMatchStatus(matchId);
+
+      String user1Id = current.getMatchDetails().getUser1Id();
+      String user2Id = current.getMatchDetails().getUser2Id();
+      AcceptanceStatus u1 = current.getUser1Accepted();
+      AcceptanceStatus u2 = current.getUser2Accepted();
+
+      // If the other user still hasn't connected, expire the match
+      boolean otherConnected = (user1Id.equals(userId) && u2 == AcceptanceStatus.CONNECTED)
+          || (user2Id.equals(userId) && u1 == AcceptanceStatus.CONNECTED);
+
+      if (!otherConnected) {
+        log.warn("Match {} expired after 10s. Other user not connected. Marking as REJECTED.", matchId);
+        connectFuture.complete(MatchAcceptanceOutcome.Status.REJECTED);
+      } else {
+        log.info("Match {} still valid. Other user connected in time.", matchId);
+      }
+
+    });
+  }
+
+  /**
+   * Handles the timeout for a user's connection to a match. If the user isn't
+   * accepted or rejected within the time limit, marks the match as REJECTED.
+   * 
+   * @param userId        the ID of the user
+   * @param matchId       the ID of the match
+   * @param connectFuture the future representing the user's connection status.
+   */
+  private void handleMatchConnectTimeout(String userId, String matchId,
+      CompletableFuture<MatchAcceptanceOutcome.Status> connectFuture) {
+    long timeoutMs = timeoutConfig.getMatchAcceptance();
+    CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute(() -> {
+      if (connectFuture.isDone()) {
+        return;
+      }
+      log.warn("User {}'s connection to match {} timed out after {} ms. Rejecting..", userId, matchId, timeoutMs);
+      rejectMatch(userId, matchId);
+      log.info("User {}'s connect future for match {} marked as REJECTED due to timeout", userId, matchId);
+    });
+  }
+
+  /**
    * Accepts a match for a specified user.
    *
-   * @param userId the ID of the accepting user
+   * @param userId  the ID of the accepting user
    * @param matchId the ID of the match the user is accepting
    * @return the updated match acceptance status
    */
@@ -102,10 +174,10 @@ public class AcceptanceService {
     log.info("User {} accepted match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-      matchId,
-      userId,
-      AcceptanceStatus.ACCEPTED,
-      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+        matchId,
+        userId,
+        AcceptanceStatus.ACCEPTED,
+        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -131,7 +203,7 @@ public class AcceptanceService {
   /**
    * Rejects a match for a specified user.
    *
-   * @param userId the ID of the user rejecting the match
+   * @param userId  the ID of the user rejecting the match
    * @param matchId the ID of the match to reject
    * @return the updated match acceptance status
    */
@@ -139,10 +211,10 @@ public class AcceptanceService {
     log.info("User {} rejecting match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-      matchId,
-      userId,
-      AcceptanceStatus.REJECTED,
-      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+        matchId,
+        userId,
+        AcceptanceStatus.REJECTED,
+        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -165,7 +237,7 @@ public class AcceptanceService {
    * 
    * @param user1Id the user ID of the first user in the match acceptance
    * @param user2Id the user ID of the second user in the match acceptance
-   * @param status the status of the match acceptance
+   * @param status  the status of the match acceptance
    */
   private void publishAcceptanceNotification(String user1Id, String user2Id, MatchAcceptanceOutcome.Status status) {
     log.info("Publishing acceptance notification for match status {} to users {} and {}", status, user1Id, user2Id);
@@ -225,8 +297,8 @@ public class AcceptanceService {
 
     if (preference == null || preference.getTopics() == null || preference.getTopics().isEmpty()) {
       throw new IllegalStateException(
-        "Question preferences are required to create a collaboration session for match "
-          + status.getMatchDetails().getMatchId());
+          "Question preferences are required to create a collaboration session for match "
+              + status.getMatchDetails().getMatchId());
     }
 
     Map<String, List<String>> mapped = new HashMap<>();
@@ -243,7 +315,8 @@ public class AcceptanceService {
    * Helper to determine the overall match acceptance result.
    *
    * @param status the MatchAcceptanceStatus to check
-   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING" otherwise
+   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING"
+   *         otherwise
    */
   private MatchAcceptanceOutcome.Status evaluateMatchOutcome(MatchAcceptanceStatus status) {
     if (status == null) {
@@ -266,7 +339,8 @@ public class AcceptanceService {
   }
 
   /**
-   * Waits for all ongoing acceptance requests to complete naturally through their timeout mechanism or user response.
+   * Waits for all ongoing acceptance requests to complete naturally through their
+   * timeout mechanism or user response.
    * Logs progress periodically until all are done or the timeout expires.
    *
    * @param timeout the maximum time to wait before giving up
@@ -277,7 +351,7 @@ public class AcceptanceService {
 
     int initialCount = matchedWaitingFutures.size();
     log.info("Graceful shutdown: waiting up to {}s for {} acceptance requests to complete...",
-      timeout.getSeconds(), initialCount);
+        timeout.getSeconds(), initialCount);
 
     if (initialCount == 0) {
       log.info("No pending acceptance requests. Proceeding with continuing shutdown.");
@@ -294,7 +368,7 @@ public class AcceptanceService {
 
           if (remaining != previous) {
             log.info("Acceptance shutdown progress: {} → {} remaining after {}s",
-              previous, remaining, elapsed);
+                previous, remaining, elapsed);
             previous = remaining;
           } else if (elapsed % 5 == 0) {
             log.debug("Acceptance shutdown: {} still remaining after {}s", remaining, elapsed);
@@ -305,10 +379,10 @@ public class AcceptanceService {
 
         if (matchedWaitingFutures.isEmpty()) {
           log.info("All acceptance requests completed cleanly in {}s",
-            (System.currentTimeMillis() - start) / 1000);
+              (System.currentTimeMillis() - start) / 1000);
         } else {
           log.warn("Shutdown timeout reached: {} acceptance requests still pending",
-            matchedWaitingFutures.size());
+              matchedWaitingFutures.size());
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
