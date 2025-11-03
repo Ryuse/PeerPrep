@@ -110,7 +110,7 @@ public class AcceptanceService {
 
     Long matchTimestamp = redisAcceptanceService.getTimestampFromMatchId(matchId);
     long nowSec = System.currentTimeMillis() / 1000L; // Redis time is in UNIX seconds.
-    long delaySec = (matchTimestamp + 10) - nowSec;
+    long delaySec = (matchTimestamp + timeoutConfig.getMatchAcceptanceConnectionExpiry()) - nowSec;
     log.info("Scheduling expiry check for match {} in {} seconds", matchId, delaySec);
 
     CompletableFuture.delayedExecutor(delaySec, TimeUnit.SECONDS).execute(() -> {
