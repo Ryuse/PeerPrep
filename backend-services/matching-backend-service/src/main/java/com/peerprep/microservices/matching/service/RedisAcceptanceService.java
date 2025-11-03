@@ -25,8 +25,7 @@ import java.util.List;
 /**
  * Service that manages the match acceptance pool in Redis.
  * 
- * This service stores match acceptance in a Redis pool and supports atomic
- * operation.
+ * This service stores match acceptance in a Redis pool and supports atomic operation.
  */
 @Service
 @Slf4j
@@ -95,23 +94,23 @@ public class RedisAcceptanceService {
   /**
    * Atomically saves both the match details and user to matchId mappings.
    * 
-   * @param status  the {@link MatchAcceptanceStatus} containing match details
+   * @param status the {@link MatchAcceptanceStatus} containing match details
    * @param user1Id the ID of the first user in the match
    * @param user2Id the ID of the second user in the match
    * @throws AcceptanceMappingException if serialization of {@code status} fails
    */
   public void saveMatchAcceptanceDetails(
-      MatchAcceptanceStatus status,
-      String user1Id,
-      String user2Id) {
+    MatchAcceptanceStatus status,
+    String user1Id,
+    String user2Id) {
     String matchId = status.getMatchDetails().getMatchId();
     try {
       String json = objectMapper.writeValueAsString(status);
 
       String result = redisTemplate.execute(
-          saveAcceptanceScript,
-          List.of(MATCH_KEY_PREFIX, MATCHED_POOL_KEY),
-          matchId, user1Id, user2Id, json, String.valueOf(MATCH_EXPIRATION.toSeconds()));
+        saveAcceptanceScript,
+        List.of(MATCH_KEY_PREFIX, MATCHED_POOL_KEY),
+        matchId, user1Id, user2Id, json, String.valueOf(MATCH_EXPIRATION.toSeconds()));
 
       if ("OK".equals(result)) {
         log.info("Saved match {} atomically with users {} and {} in matched pool", matchId, user1Id, user2Id);
@@ -149,8 +148,7 @@ public class RedisAcceptanceService {
    * Retrieves the creation timestamp (in Unix seconds) for a given matchId.
    *
    * @param matchId the ID of the match
-   * @return the creation timestamp as a {@link Long}, or null if not found or
-   *         invalid
+   * @return the creation timestamp as a {@link Long}, or null if not found or invalid
    */
   public Long getTimestampFromMatchId(String matchId) {
     String timestampKey = MATCH_KEY_PREFIX + matchId + ":timestamp";
@@ -175,23 +173,23 @@ public class RedisAcceptanceService {
   /**
    * Atomically updates acceptance or rejection in Redis using Lua.
    *
-   * @param matchId        The match ID
-   * @param userId         The user ID
-   * @param newStatus      ACCEPTED or REJECTED
+   * @param matchId The match ID
+   * @param userId The user ID
+   * @param newStatus ACCEPTED or REJECTED
    * @param publishChannel optional Redis channel to publish after update
    * @return updated MatchAcceptanceStatus
    */
   public MatchAcceptanceStatus updateAcceptance(
-      String matchId, String userId, AcceptanceStatus newStatus, String publishChannel) {
+    String matchId, String userId, AcceptanceStatus newStatus, String publishChannel) {
 
     // Pass the prefix and matchId separately to Lua
     String updatedJson = redisTemplate.execute(
-        updateAcceptanceScript,
-        Collections.singletonList(MATCH_KEY_PREFIX), // KEYS[1] = prefix
-        matchId, // ARGV[1] = matchId
-        userId, // ARGV[2] = userId
-        newStatus.name(), // ARGV[3] = newStatus
-        publishChannel != null ? publishChannel : "" // ARGV[4] = publish channel
+      updateAcceptanceScript,
+      Collections.singletonList(MATCH_KEY_PREFIX), // KEYS[1] = prefix
+      matchId, // ARGV[1] = matchId
+      userId, // ARGV[2] = userId
+      newStatus.name(), // ARGV[3] = newStatus
+      publishChannel != null ? publishChannel : "" // ARGV[4] = publish channel
     );
 
     log.info("Updated match acceptance details for matchId {}: {}", matchId, updatedJson);
