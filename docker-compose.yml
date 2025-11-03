@@ -77,6 +77,7 @@ services:
       - "5274:5274"
     depends_on:
       - redis
+    stop_grace_period: 125s
 
   collab-service:
     build:
@@ -87,6 +88,8 @@ services:
       - ./backend-services/collab-backend-service/.env
     ports:
       - "5276:5276"
+    depends_on:
+      - history-backend-service
 
   chat-service:
     build:
@@ -97,6 +100,8 @@ services:
       - "5286:5286"
     env_file:
       - ./backend-services/chatting-backend-service/.env
+    depends_on:
+      - redis
 
   leetcode-backend-service:
     build:
