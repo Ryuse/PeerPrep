@@ -79,8 +79,9 @@ public class RedisAcceptanceService {
   public MatchAcceptanceStatus getMatchStatus(String matchId) {
     String matchKey = "match:" + matchId;
     String json = redisTemplate.opsForValue().get(matchKey);
-    if (json == null)
+    if (json == null) {
       return null;
+    }
 
     try {
       return objectMapper.readValue(json, MatchAcceptanceStatus.class);
