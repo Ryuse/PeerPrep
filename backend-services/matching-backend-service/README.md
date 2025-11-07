@@ -414,7 +414,14 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
       "status": "rejected"
     }
     ```
+  - HTTP STATUS 410 GONE:
+    The match connection is expired.
 
+    ```json
+    {
+      "status": "expired"
+    }
+    ```
   - HTTP STATUS 500 Internal Server Error:
     The matchId does not exist, has expired or the supplied userId does not belong to the match acceptance process.
     ```
@@ -468,7 +475,7 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
 
   - HTTP STATUS 500 Internal Server Error:
     The matchId does not exist, has expired or the supplied userId does not belong to the match acceptance process.
-    ```json
+    ```
     An unexpected error occurred
     ```
 
