@@ -15,7 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
 
-  @Value("${ALLOWED_ORIGINS:http://localhost:5173}")
+  @Value("${allowed.origins:http://localhost:5173}")
   private String allowedOriginsEnv;
 
   /**
@@ -29,14 +29,14 @@ public class CorsConfig {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
         String[] origins = Arrays.stream(allowedOriginsEnv.split(","))
-          .map(String::trim)
-          .toArray(String[]::new);
+            .map(String::trim)
+            .toArray(String[]::new);
 
         registry.addMapping("/**")
-          .allowedOrigins(origins)
-          .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-          .allowedHeaders("*")
-          .allowCredentials(true);
+            .allowedOrigins(origins)
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
       }
     };
   }
