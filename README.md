@@ -131,7 +131,7 @@ Once all containers are up and running, you can:
 | Question History Service | 5278 |
 | Question Service         | 5275 |
 | LeetCode Service         | 5285 |
-| Matching Service         | 5275 |
+| Matching Service         | 5274 |
 | Collaboration Service    | 5276 |
 | Chat Service             | 5286 |
 | Redis Instance           | 6379 |
