@@ -16,7 +16,7 @@ Team Members:
 - WOO ZONG HUA ([@wzhua02](https://github.com/wzhua02))
 - CENSON LEE LEMUEL JOHN ALEJO ([@Ryuse](https://github.com/Ryuse))
 - SONG JIA HUI ([@jiahui0309](https://github.com/jiahui0309))
-- SHARON SOH XUAN HUI (@[xGladiate](https://github.com/xGladiate))
+- SHARON SOH XUAN HUI ([@xGladiate](https://github.com/xGladiate))
 - YAP ZHAO YI ([@ToxOptimism](https://github.com/ToxOptimism)/[@ToxicOptimism](https://github.com/ToxicOptimism))
 
 ---
@@ -110,8 +110,7 @@ Once all containers are up and running, you can:
 
 ## Architecture Diagram
 
-[Architecture Diagram](https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g09/blob/master/docs/architecture_diagram.png)
-
+![alt text](https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g09/blob/master/docs/architecture_diagram.png "Architecture Diagram")
 —
 
 ## Ports
