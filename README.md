@@ -111,7 +111,6 @@ Once all containers are up and running, you can:
 ## Architecture Diagram
 
 ![alt text](https://github.com/CS3219-AY2526Sem1/cs3219-ay2526s1-project-g09/blob/master/docs/architecture_diagram.png "Architecture Diagram")
-—
 
 ## Ports
 
